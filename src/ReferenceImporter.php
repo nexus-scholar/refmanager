@@ -6,6 +6,8 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Nexus\RefManager\Events\ImportCompleted;
 use Nexus\RefManager\Events\ImportStarted;
+use Nexus\RefManager\Exceptions\ParseException;
+use Nexus\RefManager\Formats\Contracts\ReferenceFormat;
 use Nexus\RefManager\Models\ImportLog;
 use Nexus\RefManager\Models\ImportResult;
 use Nexus\RefManager\Services\AuthorResolver;
@@ -21,7 +23,7 @@ class ReferenceImporter
     ];
 
     public function __construct(
-        private readonly FormatManager    $formatManager,
+        private readonly FormatManager     $formatManager,
         private readonly DuplicateDetector $duplicateDetector,
         private readonly AuthorResolver   $authorResolver,
     ) {}
@@ -54,7 +56,7 @@ class ReferenceImporter
         return $this->process($content, $format);
     }
 
-    private function process(mixed $content, mixed $format, ?string $filename = null): ImportResult
+    private function process(string $content, ReferenceFormat $format, ?string $filename = null): ImportResult
     {
         event(new ImportStarted($format->label(), $filename, $this->options));
 
@@ -65,7 +67,7 @@ class ReferenceImporter
         $duplicates = collect();
         $failed     = collect();
 
-        foreach ($canonicals as $canonical) {
+        foreach ($canonicals as $index => $canonical) {
             try {
                 if ($this->options['deduplicate']) {
                     $dupResult = $this->duplicateDetector->check(
@@ -85,12 +87,30 @@ class ReferenceImporter
                 }
 
                 $imported->push($document);
+            } catch (ParseException $e) {
+                $failed->push([
+                    'record'  => $canonical,
+                    'error'   => $e->getMessage(),
+                    'meta'    => $e->getMeta(),
+                    'index'   => $index,
+                ]);
             } catch (\Throwable $e) {
-                $failed->push(['record' => $canonical, 'error' => $e->getMessage()]);
+                $failed->push([
+                    'record'  => $canonical,
+                    'error'   => $e->getMessage(),
+                    'index'   => $index,
+                ]);
             }
         }
 
-        $log = $this->writeLog($format->label(), $filename, $canonicals->count(), $imported->count(), $duplicates->count(), $failed->count());
+        $log = $this->writeLog(
+            $format->label(),
+            $filename,
+            $canonicals->count(),
+            $imported->count(),
+            $duplicates->count(),
+            $failed->count()
+        );
 
         $result = new ImportResult($canonicals, $imported, $duplicates, $failed, $log);
 
@@ -111,7 +131,7 @@ class ReferenceImporter
         $doc->issue           = $canonical['issue'] ?? null;
         $doc->pages           = $canonical['page'] ?? null;
         $doc->publisher       = $canonical['publisher'] ?? null;
-        $doc->publisher_place = $canonical['publisher-place'] ?? null;
+        $doc->publisher_place  = $canonical['publisher-place'] ?? null;
         $doc->language        = $canonical['language'] ?? null;
         $doc->year            = $canonical['issued']['date-parts'][0][0] ?? null;
         $doc->keywords        = $canonical['keyword'] ?? [];

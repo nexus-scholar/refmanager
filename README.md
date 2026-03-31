@@ -36,6 +36,23 @@
 
 ---
 
+## Status
+
+> **v1.0** - Stable. Parsers, importer, and exporter are production-ready.
+
+| Component | Status |
+|-----------|--------|
+| RIS Parser/Exporter | ✅ Stable |
+| BibTeX Parser/Exporter | ✅ Stable |
+| CSL-JSON Parser/Exporter | ✅ Stable |
+| EndNote XML Parser/Exporter | ✅ Stable |
+| Deduplication | ✅ Stable |
+| Events & Logging | ✅ Stable |
+| Streaming Exports | ✅ Stable |
+| Facade Helpers | 🧪 Experimental |
+
+---
+
 ## Requirements
 
 - PHP 8.2+
@@ -183,6 +200,24 @@ return $exporter->toResponse($documents, 'bibtex', 'library.bib');
 
 // From collection
 return $exporter->fromCollection($collection, 'csl_json');
+```
+
+### Expressive Facade Helpers (Experimental)
+
+```php
+use Nexus\RefManager\Support\ExporterBuilder;
+
+// From documents collection
+$ris = ExporterBuilder::documents($documents)->asRis();
+
+// From a specific project
+$bibtex = ExporterBuilder::project(7)->asBibtex();
+
+// From a collection
+$json = ExporterBuilder::collection($collection)->asCslJson();
+
+// Download as file
+return ExporterBuilder::documents($documents)->download('ris', 'library.ris');
 ```
 
 ---
