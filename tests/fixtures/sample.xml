@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xml>
+  <records>
+    <record>
+      <database name="My Library">My Library.enl</database>
+      <ref-type name="Journal Article">17</ref-type>
+      <contributors>
+        <authors>
+          <author>Smith, John A.</author>
+          <author>Doe, Jane B.</author>
+        </authors>
+      </contributors>
+      <titles>
+        <title>Plant Disease Detection with Deep Learning</title>
+        <secondary-title>Computers and Electronics in Agriculture</secondary-title>
+      </titles>
+      <pages>107890-107901</pages>
+      <volume>210</volume>
+      <number>3</number>
+      <dates>
+        <year>2024</year>
+      </dates>
+      <electronic-resource-num>10.1016/j.compag.2024.001</electronic-resource-num>
+      <abstract>This study presents a CNN approach for detecting plant diseases.</abstract>
+      <keywords>
+        <keyword>plant disease</keyword>
+        <keyword>deep learning</keyword>
+        <keyword>CNN</keyword>
+      </keywords>
+    </record>
+  </records>
+</xml>

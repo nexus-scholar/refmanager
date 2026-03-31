@@ -1,0 +1,29 @@
+TY  - JOUR
+TI  - Multi-Record Test Article 1
+AU  - Author, First
+PY  - 2024
+ER  -
+
+TY  - CONF
+TI  - Conference Paper Example
+AU  - Speaker, Name
+PY  - 2023
+ER  -
+
+TY  - CHAP
+TI  - Book Chapter Example
+AU  - Writer, Sample
+PY  - 2022
+ER  -
+
+TY  - THES
+TI  - PhD Dissertation Example
+AU  - Student, Graduate
+PY  - 2021
+ER  -
+
+TY  - RPRT
+TI  - Technical Report Example
+AU  - Engineer, Test
+PY  - 2020
+ER  -

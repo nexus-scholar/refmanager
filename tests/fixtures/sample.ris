@@ -1,0 +1,38 @@
+TY  - JOUR
+TI  - Plant Disease Detection with Deep Learning
+AU  - Smith, John A.
+AU  - Doe, Jane B.
+AB  - This study presents a CNN approach for detecting plant diseases.
+DO  - 10.1016/j.compag.2024.001
+PY  - 2024
+JO  - Computers and Electronics in Agriculture
+VL  - 210
+IS  - 3
+SP  - 107890
+EP  - 107901
+KW  - plant disease
+KW  - deep learning
+KW  - CNN
+ER  -
+
+TY  - JOUR
+TI  - Soil Moisture Prediction Using IoT Sensors
+AU  - Garcia, Maria
+AU  - Chen, Wei
+PY  - 2023
+JO  - Sensors
+VL  - 23
+IS  - 8
+SP  - 4521
+EP  - 4545
+DO  - 10.3390/s23084521
+ER  -
+
+TY  - BOOK
+TI  - Precision Agriculture Fundamentals
+AU  - Brown, Robert
+PB  - Academic Press
+PY  - 2022
+KW  - precision agriculture
+KW  - IoT
+ER  -

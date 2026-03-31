@@ -1,0 +1,39 @@
+{
+    "name": "nexus/refmanager",
+    "description": "Reference manager with Zotero, EndNote, and Mendeley import/export for Laravel",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.2",
+        "illuminate/support": "^11.0|^12.0|^13.0",
+        "illuminate/database": "^11.0|^12.0|^13.0",
+        "illuminate/console": "^11.0|^12.0|^13.0",
+        "renanbr/bibtex-parser": "^2.1"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^9.0|^10.0",
+        "phpunit/phpunit": "^11.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Nexus\\RefManager\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Nexus\\RefManager\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Nexus\\RefManager\\RefManagerServiceProvider"
+            ],
+            "aliases": {
+                "RefImporter": "Nexus\\RefManager\\Facades\\RefImporter",
+                "RefExporter": "Nexus\\RefManager\\Facades\\RefExporter"
+            }
+        }
+    },
+    "minimum-stability": "stable"
+}

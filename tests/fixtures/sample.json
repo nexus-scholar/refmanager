@@ -1,0 +1,27 @@
+[
+  {
+    "type": "article-journal",
+    "title": "Plant Disease Detection with Deep Learning",
+    "author": [
+      {"family": "Smith", "given": "John A."},
+      {"family": "Doe", "given": "Jane B."}
+    ],
+    "issued": {"date-parts": [[2024]]},
+    "container-title": "Computers and Electronics in Agriculture",
+    "volume": "210",
+    "issue": "3",
+    "page": "107890-107901",
+    "DOI": "10.1016/j.compag.2024.001",
+    "keyword": ["plant disease", "deep learning", "CNN"]
+  },
+  {
+    "type": "book",
+    "title": "Precision Agriculture Fundamentals",
+    "author": [
+      {"family": "Brown", "given": "Robert"}
+    ],
+    "issued": {"date-parts": [[2022]]},
+    "publisher": "Academic Press",
+    "keyword": ["precision agriculture", "IoT"]
+  }
+]
