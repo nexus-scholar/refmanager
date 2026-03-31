@@ -1,90 +1,227 @@
-# Shabakah Reference Manager — Package Blueprint
+# Nexus RefManager
 
-> **Laravel package** for managing bibliographic references with full import/export support for Zotero, EndNote, and Mendeley.
+[![Tests](https://github.com/nexus-scholar/refmanager/workflows/Tests/badge.svg)](https://github.com/nexus-scholar/refmanager/actions)
+[![PHP Version](https://img.shields.io/packagist/php-v/nexus/refmanager.svg)](https://packagist.org/packages/nexus/refmanager)
+[![Laravel Version](https://img.shields.io/packagist/illuminate/laravel/11.svg)](https://laravel.com)
+[![License](https://img.shields.io/packagist/license/nexus/refmanager.svg)](LICENSE)
+[![Total Downloads](https://img.shields.io/packagist/dt/nexus/refmanager.svg)](https://packagist.org/packages/nexus/refmanager)
+
+> A Laravel package for managing bibliographic references with full import/export support for Zotero, EndNote, and Mendeley.
 
 ---
 
 ## Table of Contents
 
-1. [Overview](#overview)
-2. [Package Identity](#package-identity)
-3. [Feature Scope](#feature-scope)
-4. [Architecture](#architecture)
-5. [Directory Structure](#directory-structure)
-6. [Data Model](#data-model)
-7. [Format Support Matrix](#format-support-matrix)
-8. [Quick Start](#quick-start)
-9. [API Reference](#api-reference)
-10. [Extension Guide](#extension-guide)
+- [Features](#features)
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [Usage](#usage)
+- [Supported Formats](#supported-formats)
+- [API Reference](#api-reference)
+- [Testing](#testing)
+- [Contributing](#contributing)
+- [License](#license)
 
 ---
 
-## Overview
+## Features
 
-`shabakah/refmanager` is a Laravel package that provides a complete reference management layer — import, export, deduplication, and collection management — designed to integrate with the existing Shabakah systematic literature review ecosystem.
-
-It builds on top of the `Document` + `Author` Eloquent models already present in your system and wraps them with a clean adapter-based I/O layer that speaks the native file formats of every major reference manager.
-
----
-
-## Package Identity
-
-| Property     | Value                              |
-|--------------|------------------------------------|
-| Package name | `shabakah/refmanager`              |
-| Namespace    | `Shabakah\RefManager`              |
-| Laravel      | 11.x / 12.x                        |
-| PHP          | 8.2+                               |
-| License      | MIT                                |
+- **Multi-format Import/Export** - RIS, BibTeX, CSL-JSON, and EndNote XML
+- **Smart Deduplication** - DOI exact match + title+year fuzzy matching
+- **Collection Management** - Named reference lists with notes and tagging
+- **Event-Driven** - Fire events for logging and post-processing hooks
+- **Streaming Exports** - Memory-safe exports for large collections
+- **SLR Integration** - Filter and export screened/included documents
 
 ---
 
-## Feature Scope
+## Requirements
 
-### Core Features
-- **Import** RIS, BibTeX, CSL-JSON, and EndNote XML files into `Document` + `Author` models
-- **Export** document collections to all four formats with a streaming response helper
-- **Deduplication** by DOI fingerprint and title+year fuzzy fallback
-- **Collection management** — named reference lists, tagging, notes
-- **Filtered export** — export only screened/included documents post-SLR
-- **Batch operations** — merge duplicates, bulk tag, bulk export
-
-### Out of Scope (v1)
-- Citation style rendering (CSL processing) — use `seboettg/citeproc-php` separately
-- Zotero/Mendeley cloud API sync (planned v2)
-- PDF attachment management
+- PHP 8.2+
+- Laravel 11.x / 12.x / 13.x
+- SQLite (for testing)
 
 ---
 
-## Architecture
+## Installation
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                     User / Controller                       │
-└──────────────────────┬──────────────────────────────────────┘
-                       │
-          ┌────────────▼────────────┐
-          │     FormatManager       │  ← resolves format by ext/MIME
-          └────────┬────────────────┘
-         ┌─────────▼──────────┐
-         │  ReferenceFormat   │  ← interface (parse / serialize)
-         └────────────────────┘
-              │         │
-   ┌──────────▼──┐  ┌───▼──────────┐
-   │  Importer   │  │   Exporter   │
-   └──────┬──────┘  └──────┬───────┘
-          │                │
-   ┌──────▼────────────────▼───────┐
-   │       Document Collection     │  ← Eloquent models
-   │   Document ↔ Author (pivot)   │
-   └───────────────────────────────┘
+### Via Composer
+
+```bash
+composer require nexus/refmanager
 ```
 
-### Design Principles
+### Publish Configuration
 
-1. **Adapter pattern** — every format is a swappable implementation of `ReferenceFormat`
-2. **No format lock-in** — the canonical internal representation is a plain PHP array (CSL-JSON schema)
-3. **Non-destructive imports** — always return hydrated models, never auto-save; the caller decides persistence
-4. **Event-driven** — every import/export fires events so host apps can hook in (logging, notifications, post-processing)
-5. **Streaming exports** — large collections stream directly to response without buffering in memory
+```bash
+php artisan vendor:publish --tag=refmanager-config
+```
 
+### Run Migrations
+
+```bash
+php artisan migrate
+```
+
+### Add the Trait to Your Document Model
+
+```php
+use Nexus\RefManager\Concerns\HasBibliographicExport;
+
+class Document extends Model
+{
+    use HasBibliographicExport;
+}
+```
+
+---
+
+## Quick Start
+
+### Import References
+
+```php
+use Nexus\RefManager\ReferenceImporter;
+
+// Import from file (auto-detects format)
+$result = app(ReferenceImporter::class)
+    ->withOptions(['deduplicate' => true, 'save' => true])
+    ->fromFile('library.ris');
+
+// Import from string with explicit format
+$result = app(ReferenceImporter::class)
+    ->fromString($risContent, 'ris');
+```
+
+### Export References
+
+```php
+use Nexus\RefManager\ReferenceExporter;
+
+// Export as string
+$ris = app(ReferenceExporter::class)->toString($documents, 'ris');
+
+// Export as streaming download
+return app(ReferenceExporter::class)
+    ->toResponse($documents, 'bibtex', 'library.bib');
+```
+
+### Artisan Commands
+
+```bash
+# Import a file
+php artisan refmanager:import library.ris --project=1
+
+# Dry-run import
+php artisan refmanager:import library.ris --dry-run
+
+# Export documents
+php artisan refmanager:export --project=1 --format=ris --output=library.ris
+
+# List supported formats
+php artisan refmanager:formats
+```
+
+---
+
+## Supported Formats
+
+| Format | Extension | MIME Type | Import | Export |
+|--------|-----------|-----------|:------:|:------:|
+| RIS | `.ris` | `application/x-research-info-systems` | ✅ | ✅ |
+| BibTeX | `.bib` | `application/x-bibtex` | ✅ | ✅ |
+| CSL-JSON | `.json` | `application/vnd.citationstyles.csl+json` | ✅ | ✅ |
+| EndNote XML | `.xml` | `application/xml` | ✅ | ✅ |
+
+---
+
+## API Reference
+
+### ReferenceImporter
+
+```php
+// From file (auto-detects format by extension)
+$result = $importer->fromFile('/path/to/library.ris');
+
+// From uploaded file
+$result = $importer->fromUpload($request->file('library'));
+
+// From raw string
+$result = $importer->fromString($content, 'ris');
+
+// With options
+$result = $importer->withOptions([
+    'deduplicate'   => true,   // default: true
+    'save'          => false,  // default: false (return unsaved models)
+    'project_id'    => 7,
+    'collection_id' => 42,
+])->fromFile('/path/to/library.bib');
+```
+
+### ImportResult
+
+```php
+$result->documents;     // All parsed records (including duplicates)
+$result->imported;     // Net-new documents
+$result->duplicates;   // Duplicate records found
+$result->failed;       // Records that failed to parse
+$result->log;         // ImportLog audit record
+$result->total();      // Total count
+$result->count();      // Imported count
+$result->wasSuccessful(); // bool (no failures)
+```
+
+### ReferenceExporter
+
+```php
+// As string
+$ris = $exporter->toString($documents, 'ris');
+
+// As streaming response
+return $exporter->toResponse($documents, 'bibtex', 'library.bib');
+
+// From collection
+return $exporter->fromCollection($collection, 'csl_json');
+```
+
+---
+
+## Testing
+
+```bash
+# Install dependencies
+composer install
+
+# Run all tests
+composer test
+# or
+./vendor/bin/phpunit
+
+# Run with testdox output
+./vendor/bin/phpunit --testdox
+
+# Run single test file
+./vendor/bin/phpunit tests/Unit/Formats/RisFormatTest.php
+
+# Run single test method
+./vendor/bin/phpunit --filter=testItParsesASingleRisRecord
+```
+
+---
+
+## Contributing
+
+Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+---
+
+## License
+
+The Nexus RefManager package is open-sourced software licensed under the [MIT license](LICENSE).

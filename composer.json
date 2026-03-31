@@ -3,6 +3,27 @@
     "description": "Reference manager with Zotero, EndNote, and Mendeley import/export for Laravel",
     "type": "library",
     "license": "MIT",
+    "keywords": [
+        "laravel",
+        "bibliography",
+        "references",
+        "ris",
+        "bibtex",
+        "csl-json",
+        "endnote",
+        "zotero",
+        "mendeley",
+        "citation",
+        "academic",
+        "references"
+    ],
+    "homepage": "https://github.com/nexus-scholar/refmanager",
+    "readme": "README.md",
+    "time": "2024-01-01",
+    "support": {
+        "issues": "https://github.com/nexus-scholar/refmanager/issues",
+        "source": "https://github.com/nexus-scholar/refmanager"
+    },
     "require": {
         "php": "^8.2",
         "illuminate/support": "^11.0|^12.0|^13.0",
@@ -24,6 +45,13 @@
             "Nexus\\RefManager\\Tests\\": "tests/"
         }
     },
+    "scripts": {
+        "test": "phpunit",
+        "test-do": "phpunit --testdox"
+    },
+    "config": {
+        "sort-packages": true
+    },
     "extra": {
         "laravel": {
             "providers": [
@@ -35,5 +63,6 @@
             }
         }
     },
-    "minimum-stability": "stable"
+    "minimum-stability": "stable",
+    "prefer-stable": true
 }
