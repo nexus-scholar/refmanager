@@ -50,7 +50,10 @@
         "test-do": "phpunit --testdox"
     },
     "config": {
-        "sort-packages": true
+        "sort-packages": true,
+        "platform": {
+            "php": "8.2"
+        }
     },
     "extra": {
         "laravel": {
