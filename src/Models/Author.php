@@ -8,8 +8,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 class Author extends Model
 {
     protected $fillable = [
-        'first_name',
-        'last_name',
+        'given_name',
+        'family_name',
         'orcid',
     ];
 
@@ -21,5 +21,14 @@ class Author extends Model
             'author_id',
             'document_id'
         )->withPivot('author_order');
+    }
+
+    public function getFullName(): string
+    {
+        if ($this->given_name) {
+            return "{$this->given_name} {$this->family_name}";
+        }
+
+        return (string) $this->family_name;
     }
 }

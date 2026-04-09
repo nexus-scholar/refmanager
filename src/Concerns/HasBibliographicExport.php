@@ -30,8 +30,8 @@ trait HasBibliographicExport
             'author'          => $this->authors
                                     ->sortBy('pivot.author_order')
                                     ->map(fn($a) => [
-                                        'family' => $a->last_name,
-                                        'given'  => $a->first_name,
+                                        'family' => $a->family_name,
+                                        'given'  => $a->given_name,
                                         'ORCID'  => $a->orcid ?? null,
                                     ])->values()->toArray(),
             'keyword'         => $this->keywords ?? [],

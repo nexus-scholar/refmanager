@@ -41,13 +41,13 @@ class AuthorResolver
 
         if (isset($authorData['literal'])) {
             return $authorModel::firstOrCreate(
-                ['last_name' => $authorData['literal'], 'first_name' => ''],
+                ['family_name' => $authorData['literal'], 'given_name' => ''],
             );
         }
 
         return $authorModel::firstOrCreate([
-            'last_name'  => $authorData['family'] ?? '',
-            'first_name' => $authorData['given']  ?? '',
+            'family_name' => $authorData['family'] ?? '',
+            'given_name'  => $authorData['given'] ?? '',
         ]);
     }
 }

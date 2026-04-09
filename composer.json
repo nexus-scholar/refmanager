@@ -35,6 +35,9 @@
         "orchestra/testbench": "^9.0|^10.0",
         "phpunit/phpunit": "^11.0"
     },
+    "suggest": {
+        "nexus/nexus-php": "Required to use DocumentMapper::fromNexus() for direct pipeline integration"
+    },
     "autoload": {
         "psr-4": {
             "Nexus\\RefManager\\": "src/"

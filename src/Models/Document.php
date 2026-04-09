@@ -26,10 +26,24 @@ class Document extends Model
         'year',
         'keywords',
         'document_type',
+        'provider',
+        'provider_id',
+        'arxiv_id',
+        'openalex_id',
+        's2_id',
+        'pubmed_id',
+        'cited_by_count',
+        'query_id',
+        'query_text',
+        'retrieved_at',
+        'cluster_id',
+        'raw_data',
     ];
 
     protected $casts = [
-        'keywords' => 'json',
+        'keywords' => 'array',
+        'raw_data' => 'array',
+        'retrieved_at' => 'datetime',
     ];
 
     public function authors(): BelongsToMany

@@ -24,6 +24,20 @@ return new class extends Migration {
             $table->integer('year')->nullable()->index();
             $table->json('keywords')->nullable();
             $table->string('document_type')->default('article');
+
+            $table->string('provider')->default('unknown');
+            $table->string('provider_id')->nullable();
+            $table->string('arxiv_id')->nullable();
+            $table->string('openalex_id')->nullable();
+            $table->string('s2_id')->nullable();
+            $table->string('pubmed_id')->nullable();
+            $table->unsignedInteger('cited_by_count')->nullable();
+            $table->string('query_id')->nullable();
+            $table->string('query_text')->nullable();
+            $table->timestamp('retrieved_at')->nullable();
+            $table->unsignedInteger('cluster_id')->nullable();
+            $table->json('raw_data')->nullable();
+
             $table->timestamps();
         });
     }

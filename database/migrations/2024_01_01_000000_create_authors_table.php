@@ -9,8 +9,8 @@ return new class extends Migration {
     {
         Schema::create('authors', function (Blueprint $table) {
             $table->id();
-            $table->string('first_name')->nullable();
-            $table->string('last_name');
+            $table->string('given_name')->nullable();
+            $table->string('family_name');
             $table->string('orcid')->nullable();
             $table->timestamps();
         });
