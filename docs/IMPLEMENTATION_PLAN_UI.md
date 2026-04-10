@@ -18,15 +18,23 @@ Transform the headless package into a data provider.
     - Load routes with configurable prefix and middleware.
     - Add `api` configuration key to `config/refmanager.php`.
 - [ ] Implement `Http/Resources` for consistent JSON output:
+        - [x] Create `refmanager/routes/api.php` for internal package routes.
+        - [x] Update `RefManagerServiceProvider` to:
+            - Load routes with configurable prefix and middleware.
+            - Add `api` configuration key to `config/refmanager.php`.
+        - [x] Implement `Http/Resources` for consistent JSON output:
+            - `DocumentResource`
+            - `AuthorResource`
+            - `CollectionResource` (for search/import results)
     - `DocumentResource`
     - `AuthorResource`
     - `CollectionResource` (for search/import results)
 
 ### 1.2 Core Endpoints
-- [ ] **Documents API**: `GET /documents`, `GET /documents/{id}`, `PATCH /documents/{id}`, `DELETE /documents/{id}`.
+- [x] **Documents API**: `GET /documents`, `GET /documents/{id}`, `PATCH /documents/{id}`, `DELETE /documents/{id}`.
     - Support filtering by status (PRISMA), year, and search query.
-- [ ] **Import API**: `POST /import` - handles binary/text file upload and routes to `ReferenceImporter`.
-- [ ] **Deduplication API**:
+- [x] **Import API**: `POST /import` - handles binary/text file upload and routes to `ReferenceImporter`.
+- [x] **Deduplication API**:
     - `POST /deduplicate/scan`: Trigger fuzzy matching.
     - `GET /duplicates`: List identified clusters for review.
     - `POST /duplicates/resolve`: Merge or ignore candidate duplicates.
@@ -37,36 +45,36 @@ Transform the headless package into a data provider.
 Build the modular component library in `refmanager/ui`.
 
 ### 2.1 Project Setup
-- [ ] Initialize Vite + TypeScript + Tailwind project.
-- [ ] Configure `shadcn/ui` and install base primitives (Table, Button, Dialog, Badge, Card).
-- [ ] Setup `axios` or `fetch` client with configurable `baseURL`.
+- [x] Initialize Vite + TypeScript + Tailwind project.
+- [x] Configure `shadcn/ui` and install base primitives (Table, Button, Dialog, Badge, Card).
+- [x] Setup `axios` or `fetch` client with configurable `baseURL`.
 
 ### 2.2 Core Components
-- [ ] **`<RefManagerProvider />`**: Context provider for API config and global state.
-- [ ] **`<DocumentTable />`**:
+- [x] **`<RefManagerProvider />`**: Context provider for API config and global state.
+- [x] **`<DocumentTable />`**:
     - Server-side pagination and sorting.
     - Status badges (Screened, Included, Excluded).
-- [ ] **`<ImportDropzone />`**:
+- [x] **`<ImportDropzone />`**:
     - File upload UI with progress tracking.
     - Validation error reporting (from `ParseException`).
-- [ ] **`<DeduplicationReview />`**:
+- [x] **`<DeduplicationReview />`**:
     - Side-by-side comparison of duplicate candidates.
     - "Merge" and "Keep Both" actions.
 
 ### 2.3 Integration Hooks
-- [ ] `useDocuments()`: SWR/React-Query hook for library management.
-- [ ] `useImport()`: Mutation hook for running imports.
-- [ ] `useDeduplication()`: Hook for managing the dedup workflow.
+- [x] `useDocuments()`: SWR/React-Query hook for library management.
+- [x] `useImport()`: Mutation hook for running imports.
+- [x] `useDeduplication()`: Hook for managing the dedup workflow.
 
 ---
 
 ## Phase 3: Integration & Distribution
 ### 3.1 Local Development Workflow
-- [ ] Setup `npm link` or workspace reference for testing the UI inside a host Laravel app.
-- [ ] Document Tailwind "Content" path configuration for host applications.
+- [x] Setup `npm link` or workspace reference for testing the UI inside a host Laravel app.
+- [x] Document Tailwind "Content" path configuration for host applications.
 
 ### 3.2 Installation Commands
-- [ ] Add `refmanager:ui-install` Artisan command to scaffold a basic dashboard in a Laravel/Inertia project.
+- [x] Add `refmanager:ui-install` Artisan command to scaffold a basic dashboard in a Laravel/Inertia project.
 
 ---
 
@@ -78,7 +86,7 @@ Build the modular component library in `refmanager/ui`.
 ---
 
 ## Progress Checklist
-- [ ] Phase 1: API Layer [0%]
-- [ ] Phase 2: UI Toolkit [0%]
-- [ ] Phase 3: Integration [0%]
+- [x] Phase 1: API Layer [100%]
+- [x] Phase 2: UI Toolkit [100%]
+- [x] Phase 3: Integration [100%]
 

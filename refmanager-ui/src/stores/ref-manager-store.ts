@@ -5,6 +5,7 @@ type DocumentFilters = {
   perPage: number
   query: string
   status: string
+  sort: string
 }
 
 type RefManagerState = {
@@ -13,6 +14,7 @@ type RefManagerState = {
   setApiBaseUrl: (apiBaseUrl: string) => void
   setFilters: (filters: Partial<DocumentFilters>) => void
   setStatus: (status: string) => void
+  setSort: (sort: string) => void
   setQuery: (query: string) => void
   setPage: (page: number) => void
   setPerPage: (perPage: number) => void
@@ -24,6 +26,7 @@ const initialFilters: DocumentFilters = {
   perPage: 10,
   query: '',
   status: '',
+  sort: '-year',
 }
 
 export const useRefManagerStore = create<RefManagerState>((set) => ({
@@ -37,6 +40,10 @@ export const useRefManagerStore = create<RefManagerState>((set) => ({
   setStatus: (status) =>
     set((state) => ({
       filters: { ...state.filters, status, page: 1 },
+    })),
+  setSort: (sort) =>
+    set((state) => ({
+      filters: { ...state.filters, sort, page: 1 },
     })),
   setQuery: (query) =>
     set((state) => ({

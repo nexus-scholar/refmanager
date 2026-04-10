@@ -1,0 +1,25 @@
+import { DeduplicationReview, DocumentTable, ImportDropzone, RefManagerProvider } from '@nexus/refmanager-ui'
+
+export default function Workspace() {
+  return (
+    <RefManagerProvider apiBaseUrl='{{apiBaseUrl}}'>
+      <div className='mx-auto max-w-7xl space-y-6 py-8'>
+        <h1 className='text-2xl font-semibold'>RefManager Workspace</h1>
+
+        <section className='grid gap-6 lg:grid-cols-3'>
+          <div className='lg:col-span-1'>
+            <ImportDropzone />
+          </div>
+          <div className='lg:col-span-2'>
+            <DocumentTable defaultSort='-year' columns={['title', 'authors', 'year', 'status']} />
+          </div>
+        </section>
+
+        <section>
+          <DeduplicationReview />
+        </section>
+      </div>
+    </RefManagerProvider>
+  )
+}
+

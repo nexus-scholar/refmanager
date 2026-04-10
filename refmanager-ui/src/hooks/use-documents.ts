@@ -7,6 +7,7 @@ type UseDocumentsOptions = {
   perPage?: number
   query?: string
   status?: string
+  sort?: string
 }
 
 export function useDocuments(options: UseDocumentsOptions = {}) {
@@ -18,6 +19,7 @@ export function useDocuments(options: UseDocumentsOptions = {}) {
     perPage: options.perPage ?? storeFilters.perPage,
     query: options.query ?? storeFilters.query,
     status: options.status ?? storeFilters.status,
+    sort: options.sort ?? storeFilters.sort,
   }
 
   const queryResult = useQuery({
@@ -36,6 +38,9 @@ export function useDocuments(options: UseDocumentsOptions = {}) {
 
       if (filters.status)
         params.set('status', filters.status)
+
+      if (filters.sort)
+        params.set('sort', filters.sort)
 
       const endpoint = `${apiBaseUrl}/documents${params.toString() ? `?${params.toString()}` : ''}`
       const response = await fetch(endpoint, {

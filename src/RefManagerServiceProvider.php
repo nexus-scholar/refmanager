@@ -54,6 +54,7 @@ class RefManagerServiceProvider extends ServiceProvider
                 Commands\ExportCommand::class,
                 Commands\DuplicatesCommand::class,
                 Commands\FormatsCommand::class,
+                Commands\UiInstallCommand::class,
             ]);
         }
     }

@@ -1,0 +1,6 @@
+// routes/web.php
+use Inertia\Inertia;
+use Illuminate\Support\Facades\Route;
+
+Route::get('/refmanager/workspace', fn () => Inertia::render('RefManager/Workspace'));
+
