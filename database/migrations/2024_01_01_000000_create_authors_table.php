@@ -11,7 +11,7 @@ return new class extends Migration {
             $table->id();
             $table->string('given_name')->nullable();
             $table->string('family_name');
-            $table->string('orcid')->nullable();
+            $table->string('orcid')->nullable()->unique();
             $table->timestamps();
         });
     }

@@ -38,10 +38,21 @@ class AuthorResolver
     public function resolve(array $authorData): mixed
     {
         $authorModel = config('refmanager.author_model');
+        $orcid = trim((string) ($authorData['ORCID'] ?? $authorData['orcid'] ?? ''));
 
         if (isset($authorData['literal'])) {
             return $authorModel::firstOrCreate(
                 ['family_name' => $authorData['literal'], 'given_name' => ''],
+            );
+        }
+
+        if ($orcid !== '') {
+            return $authorModel::firstOrCreate(
+                ['orcid' => $orcid],
+                [
+                    'family_name' => $authorData['family'] ?? '',
+                    'given_name' => $authorData['given'] ?? '',
+                ]
             );
         }
 
