@@ -2,6 +2,7 @@
 
 namespace Nexus\RefManager;
 
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Nexus\RefManager\Formats\RisFormat;
 use Nexus\RefManager\Formats\BibTexFormat;
@@ -41,6 +42,8 @@ class RefManagerServiceProvider extends ServiceProvider
     {
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
 
+        $this->registerApiRoutes();
+
         if ($this->app->runningInConsole()) {
             $this->publishes([
                 __DIR__.'/../config/refmanager.php' => config_path('refmanager.php'),
@@ -53,5 +56,15 @@ class RefManagerServiceProvider extends ServiceProvider
                 Commands\FormatsCommand::class,
             ]);
         }
+    }
+
+    private function registerApiRoutes(): void
+    {
+        $prefix = trim((string) config('refmanager.api.prefix', 'api/refmanager'), '/');
+        $middleware = config('refmanager.api.middleware', ['api']);
+
+        Route::middleware($middleware)
+            ->prefix($prefix)
+            ->group(__DIR__.'/../routes/api.php');
     }
 }

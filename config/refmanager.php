@@ -7,6 +7,11 @@ return [
     'document_model' => Document::class,
     'author_model' => Author::class,
 
+    'api' => [
+        'prefix' => 'api/refmanager',
+        'middleware' => ['api'],
+    ],
+
     'deduplication' => [
         'enabled' => true,
         'doi_exact' => true,
