@@ -15,15 +15,18 @@ class UiInstallCommandTest extends TestCase
         if (File::isDirectory($absolutePath))
             File::deleteDirectory($absolutePath);
 
-        $this->artisan('refmanager:ui-install', [
-            '--path' => $relativePath,
-            '--force' => true,
-        ])->assertExitCode(0);
+        try {
+            $this->artisan('refmanager:ui-install', [
+                '--path' => $relativePath,
+                '--force' => true,
+            ])->assertExitCode(0);
 
-        $this->assertFileExists($absolutePath.'/Workspace.tsx');
-        $this->assertFileExists($absolutePath.'/refmanager-route-snippet.php');
-
-        File::deleteDirectory($absolutePath);
+            $this->assertFileExists($absolutePath.'/Workspace.tsx');
+            $this->assertFileExists($absolutePath.'/refmanager-route-snippet.php');
+        } finally {
+            if (File::isDirectory($absolutePath))
+                File::deleteDirectory($absolutePath);
+        }
     }
 }
 

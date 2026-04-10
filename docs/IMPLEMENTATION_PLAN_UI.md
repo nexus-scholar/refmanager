@@ -13,19 +13,11 @@ This document outlines the step-by-step implementation of the full-stack UI arch
 Transform the headless package into a data provider.
 
 ### 1.1 Foundation & Routing
-- [ ] Create `refmanager/routes/api.php` for internal package routes.
-- [ ] Update `RefManagerServiceProvider` to:
+- [x] Create `refmanager/routes/api.php` for internal package routes.
+- [x] Update `RefManagerServiceProvider` to:
     - Load routes with configurable prefix and middleware.
     - Add `api` configuration key to `config/refmanager.php`.
-- [ ] Implement `Http/Resources` for consistent JSON output:
-        - [x] Create `refmanager/routes/api.php` for internal package routes.
-        - [x] Update `RefManagerServiceProvider` to:
-            - Load routes with configurable prefix and middleware.
-            - Add `api` configuration key to `config/refmanager.php`.
-        - [x] Implement `Http/Resources` for consistent JSON output:
-            - `DocumentResource`
-            - `AuthorResource`
-            - `CollectionResource` (for search/import results)
+- [x] Implement `Http/Resources` for consistent JSON output:
     - `DocumentResource`
     - `AuthorResource`
     - `CollectionResource` (for search/import results)
