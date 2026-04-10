@@ -9,15 +9,14 @@ class DuplicateDetector
     public function check(array $canonical, ?int $projectId = null): DuplicateResult
     {
         $documentModel = config('refmanager.document_model');
-        
-        // Pass 1: exact DOI match
+
+        // Tier 1: Exact DOI or PubMed match => auto-merge
         if ($doi = $canonical['DOI'] ?? null) {
             $normalizedDoi = $this->normalizeDoi($doi);
-            
+
             $existing = $documentModel::where('doi', $normalizedDoi)
-                ->when($projectId, function($q) use ($projectId) {
+                ->when($projectId, function ($q) use ($projectId) {
                     // Logic for project scope if applicable
-                    // This depends on how Document relates to projects
                 })->first();
 
             if ($existing) {
@@ -25,32 +24,91 @@ class DuplicateDetector
             }
         }
 
-        // Pass 2: title + year Levenshtein fuzzy match
-        $title = strtolower(trim($canonical['title'] ?? ''));
-        $year  = $canonical['issued']['date-parts'][0][0] ?? null;
+        $pmid = trim((string) ($canonical['PMID'] ?? ''));
+        if ($pmid !== '') {
+            $existing = $documentModel::where('pubmed_id', $pmid)
+                ->when($projectId, function ($q) use ($projectId) {
+                    // Logic for project scope if applicable
+                })->first();
 
-        if (strlen($title) > 10) {
+            if ($existing) {
+                return new DuplicateResult(true, $existing, 1.0, 'pubmed');
+            }
+        }
+
+        $title = $this->normalizeTitle((string) ($canonical['title'] ?? ''));
+        $year = $canonical['issued']['date-parts'][0][0] ?? null;
+        $canonicalLastNames = $this->extractAuthorLastNames($canonical['author'] ?? []);
+
+        if ($title !== '' && $year !== null) {
             $candidates = $documentModel::where('year', $year)
-                ->select(['id', 'title'])
-                ->get();
+                ->with('authors:id,family_name')
+                ->get(['id', 'title']);
 
-            $threshold = config('refmanager.deduplication.fuzzy_threshold', 0.92);
-
+            // Tier 2: Exact title + same year + at least one author last-name overlap => auto-merge
             foreach ($candidates as $candidate) {
-                $distance  = levenshtein($title, strtolower($candidate->title));
-                $maxLen    = max(strlen($title), strlen($candidate->title));
-                
-                if ($maxLen === 0) continue;
-                
-                $similarity = 1 - ($distance / $maxLen);
+                $candidateTitle = $this->normalizeTitle((string) $candidate->title);
+                if ($candidateTitle !== $title) {
+                    continue;
+                }
 
+                if ($canonicalLastNames === []) {
+                    continue;
+                }
+
+                $candidateLastNames = $candidate->authors
+                    ->pluck('family_name')
+                    ->filter()
+                    ->map(fn ($name) => strtolower(trim((string) $name)))
+                    ->unique()
+                    ->values()
+                    ->all();
+
+                if (count(array_intersect($canonicalLastNames, $candidateLastNames)) > 0) {
+                    return new DuplicateResult(true, $candidate, 0.98, 'title_year_author');
+                }
+            }
+
+            // Tier 3: Fuzzy title + same year => flag for review, no auto-merge
+            $threshold = (float) config('refmanager.deduplication.fuzzy_threshold', 0.92);
+            foreach ($candidates as $candidate) {
+                $candidateTitle = $this->normalizeTitle((string) $candidate->title);
+                if ($candidateTitle === '') {
+                    continue;
+                }
+
+                $distance = levenshtein($title, $candidateTitle);
+                $maxLen = max(strlen($title), strlen($candidateTitle));
+                if ($maxLen === 0) {
+                    continue;
+                }
+
+                $similarity = 1 - ($distance / $maxLen);
                 if ($similarity >= $threshold) {
-                    return new DuplicateResult(true, $candidate, $similarity, 'title_year');
+                    return new DuplicateResult(false, $candidate, $similarity, 'fuzzy_title_year_review');
                 }
             }
         }
 
         return new DuplicateResult(false, null, 0.0, 'none');
+    }
+
+    private function normalizeTitle(string $title): string
+    {
+        $title = strtolower(trim($title));
+        $title = preg_replace('/\s+/u', ' ', $title) ?? $title;
+
+        return $title;
+    }
+
+    private function extractAuthorLastNames(array $authors): array
+    {
+        return collect($authors)
+            ->map(fn ($author) => strtolower(trim((string) ($author['family'] ?? ''))))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
     }
 
     private function normalizeDoi(string $doi): string

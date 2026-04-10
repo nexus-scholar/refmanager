@@ -37,6 +37,9 @@ return new class extends Migration {
             $table->timestamp('retrieved_at')->nullable();
             $table->unsignedInteger('cluster_id')->nullable();
             $table->json('raw_data')->nullable();
+            $table->string('status')->default('imported')->index();
+            $table->string('exclusion_reason')->nullable();
+            $table->unsignedBigInteger('merged_into_id')->nullable()->index();
 
             $table->timestamps();
         });

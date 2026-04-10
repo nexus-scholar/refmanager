@@ -7,6 +7,7 @@ use Nexus\RefManager\Formats\RisFormat;
 use Nexus\RefManager\Formats\BibTexFormat;
 use Nexus\RefManager\Formats\CslJsonFormat;
 use Nexus\RefManager\Formats\EndNoteXmlFormat;
+use Nexus\RefManager\Formats\VectorJsonlFormat;
 
 class RefManagerServiceProvider extends ServiceProvider
 {
@@ -24,6 +25,8 @@ class RefManagerServiceProvider extends ServiceProvider
             $manager->register('bib',         BibTexFormat::class);  // alias
             $manager->register('csl_json',    CslJsonFormat::class);
             $manager->register('endnote_xml', EndNoteXmlFormat::class);
+            $manager->register('vector_jsonl', VectorJsonlFormat::class);
+            $manager->register('rag_jsonl',    VectorJsonlFormat::class);
             return $manager;
         });
 
