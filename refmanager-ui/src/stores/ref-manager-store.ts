@@ -8,6 +8,8 @@ type DocumentFilters = {
   sort: string
 }
 
+type TableDensity = 'comfortable' | 'compact'
+
 type RefManagerState = {
   apiBaseUrl: string
   filters: DocumentFilters
@@ -15,6 +17,7 @@ type RefManagerState = {
   isImportDialogOpen: boolean
   isDedupDialogOpen: boolean
   isNexusSearchDialogOpen: boolean
+  tableDensity: TableDensity
   setApiBaseUrl: (apiBaseUrl: string) => void
   setFilters: (filters: Partial<DocumentFilters>) => void
   setStatus: (status: string) => void
@@ -26,6 +29,7 @@ type RefManagerState = {
   setImportDialogOpen: (open: boolean) => void
   setDedupDialogOpen: (open: boolean) => void
   setNexusSearchDialogOpen: (open: boolean) => void
+  setTableDensity: (density: TableDensity) => void
   resetFilters: () => void
 }
 
@@ -44,6 +48,7 @@ export const useRefManagerStore = create<RefManagerState>((set) => ({
   isImportDialogOpen: false,
   isDedupDialogOpen: false,
   isNexusSearchDialogOpen: false,
+  tableDensity: 'compact',
   setApiBaseUrl: (apiBaseUrl) => set({ apiBaseUrl }),
   setFilters: (filters) =>
     set((state) => ({
@@ -73,6 +78,7 @@ export const useRefManagerStore = create<RefManagerState>((set) => ({
   setImportDialogOpen: (isImportDialogOpen) => set({ isImportDialogOpen }),
   setDedupDialogOpen: (isDedupDialogOpen) => set({ isDedupDialogOpen }),
   setNexusSearchDialogOpen: (isNexusSearchDialogOpen) => set({ isNexusSearchDialogOpen }),
+  setTableDensity: (tableDensity) => set({ tableDensity }),
   resetFilters: () => set({ filters: initialFilters }),
 }))
 

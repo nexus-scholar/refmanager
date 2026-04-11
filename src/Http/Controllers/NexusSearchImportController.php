@@ -36,13 +36,13 @@ class NexusSearchImportController extends Controller
         $nexusSearcherClass = 'Nexus\\Laravel\\NexusSearcher';
         $nexusQueryClass = 'Nexus\\Models\\Query';
 
-        if (!class_exists($nexusSearcherClass) || !class_exists($nexusQueryClass)) {
+        if (! class_exists($nexusSearcherClass) || ! class_exists($nexusQueryClass)) {
             return response()->json([
                 'message' => 'nexus/nexus-php is not installed. Install and configure nexus-php to use this endpoint.',
             ], 422);
         }
 
-        if (!app()->bound($nexusSearcherClass)) {
+        if (! app()->bound($nexusSearcherClass)) {
             return response()->json([
                 'message' => 'NexusSearcher is not bound in the container. Verify nexus-php service provider registration.',
             ], 422);
@@ -87,6 +87,7 @@ class NexusSearchImportController extends Controller
                             'confidence' => $duplicate->confidence,
                             'existing_document_id' => $duplicate->existing?->id,
                         ]);
+
                         continue;
                     }
                 }
@@ -180,8 +181,9 @@ class NexusSearchImportController extends Controller
 
         $this->syncAuthors($document, collect($canonical['author'] ?? []));
 
-        if ($collectionId !== null)
+        if ($collectionId !== null) {
             $document->referenceCollections()->syncWithoutDetaching([$collectionId => ['added_at' => now()]]);
+        }
 
         return $document;
     }
@@ -195,8 +197,8 @@ class NexusSearchImportController extends Controller
             $authorIds[$author->id] = ['author_order' => $index + 1];
         }
 
-        if ($authorIds !== [])
+        if ($authorIds !== []) {
             $document->authors()->sync($authorIds);
+        }
     }
 }
-

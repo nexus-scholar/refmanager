@@ -49,17 +49,12 @@ function Workspace() {
           </div>
         </header>
 
-        <section className="grid gap-6 xl:grid-cols-[1.7fr_1fr]">
-          <div className="space-y-4">
-            <DocumentTable
-              defaultSort="-year"
-              columns={['title', 'authors', 'year', 'status']}
-              onSelectDocument={setActiveDocumentId}
-            />
-          </div>
-          <div>
-            <DocumentMetadataPanel documentId={activeDocumentId} />
-          </div>
+        <section className="space-y-4">
+          <DocumentTable
+            defaultSort="-year"
+            columns={['title', 'authors', 'year', 'status']}
+            onSelectDocument={setActiveDocumentId}
+          />
         </section>
       </main>
 
@@ -97,6 +92,26 @@ function Workspace() {
           </DialogHeader>
           <div className="overflow-y-auto">
             <DeduplicationReview />
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={activeDocumentId !== null}
+        onOpenChange={(open) => {
+          if (!open)
+            setActiveDocumentId(null)
+        }}
+      >
+        <DialogContent className="h-screen max-w-[760px] translate-x-0 translate-y-0 top-0 start-auto end-0 rounded-none border-l p-6 sm:max-w-[760px]">
+          <DialogHeader>
+            <DialogTitle>Paper Metadata</DialogTitle>
+            <DialogDescription>
+              Detailed bibliographic and screening metadata for the selected paper.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="overflow-y-auto">
+            <DocumentMetadataPanel documentId={activeDocumentId} />
           </div>
         </DialogContent>
       </Dialog>

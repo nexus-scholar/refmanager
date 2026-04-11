@@ -17,7 +17,8 @@ export const documentSchema = z.object({
   journal: z.string().nullable(),
   year: z.number().nullable(),
   status: z.string().nullable().transform((value) => value ?? 'imported'),
-  document_type: z.string(),
+  // Some backend responses can return null for document_type; normalize for UI stability.
+  document_type: z.string().nullable().transform((value) => value ?? 'article'),
   keywords: z.array(z.string()).nullable().optional(),
   provider: z.string().nullable().optional(),
   provider_id: z.string().nullable().optional(),
