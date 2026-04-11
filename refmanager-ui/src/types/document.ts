@@ -1,2 +1,2 @@
 
-export type { Author, DocumentRecord, PaginatedResponse } from '@/schemas/document'
+export type { Author, DocumentDetails, DocumentRecord, PaginatedResponse } from '@/schemas/document'

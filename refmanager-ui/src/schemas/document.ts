@@ -16,9 +16,20 @@ export const documentSchema = z.object({
   url: z.string().nullable(),
   journal: z.string().nullable(),
   year: z.number().nullable(),
-  status: z.string(),
+  status: z.string().nullable().transform((value) => value ?? 'imported'),
   document_type: z.string(),
+  keywords: z.array(z.string()).nullable().optional(),
+  provider: z.string().nullable().optional(),
+  provider_id: z.string().nullable().optional(),
+  pubmed_id: z.string().nullable().optional(),
+  exclusion_reason: z.string().nullable().optional(),
+  created_at: z.string().nullable().optional(),
+  updated_at: z.string().nullable().optional(),
   authors: z.array(authorSchema).default([]),
+})
+
+export const documentDetailsSchema = documentSchema.extend({
+  merged_into_id: z.number().nullable().optional(),
 })
 
 export const paginationLinksSchema = z
@@ -50,6 +61,7 @@ export const paginatedDocumentsSchema = z.object({
 
 export type Author = z.infer<typeof authorSchema>
 export type DocumentRecord = z.infer<typeof documentSchema>
+export type DocumentDetails = z.infer<typeof documentDetailsSchema>
 export type PaginatedResponse<T> = {
   data: T[]
   links?: z.infer<typeof paginationLinksSchema>

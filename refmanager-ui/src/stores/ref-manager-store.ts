@@ -11,6 +11,9 @@ type DocumentFilters = {
 type RefManagerState = {
   apiBaseUrl: string
   filters: DocumentFilters
+  activeDocumentId: number | null
+  isImportDialogOpen: boolean
+  isDedupDialogOpen: boolean
   setApiBaseUrl: (apiBaseUrl: string) => void
   setFilters: (filters: Partial<DocumentFilters>) => void
   setStatus: (status: string) => void
@@ -18,6 +21,9 @@ type RefManagerState = {
   setQuery: (query: string) => void
   setPage: (page: number) => void
   setPerPage: (perPage: number) => void
+  setActiveDocumentId: (id: number | null) => void
+  setImportDialogOpen: (open: boolean) => void
+  setDedupDialogOpen: (open: boolean) => void
   resetFilters: () => void
 }
 
@@ -32,6 +38,9 @@ const initialFilters: DocumentFilters = {
 export const useRefManagerStore = create<RefManagerState>((set) => ({
   apiBaseUrl: '/api/refmanager',
   filters: initialFilters,
+  activeDocumentId: null,
+  isImportDialogOpen: false,
+  isDedupDialogOpen: false,
   setApiBaseUrl: (apiBaseUrl) => set({ apiBaseUrl }),
   setFilters: (filters) =>
     set((state) => ({
@@ -57,6 +66,9 @@ export const useRefManagerStore = create<RefManagerState>((set) => ({
     set((state) => ({
       filters: { ...state.filters, perPage: Math.max(perPage, 1), page: 1 },
     })),
+  setActiveDocumentId: (activeDocumentId) => set({ activeDocumentId }),
+  setImportDialogOpen: (isImportDialogOpen) => set({ isImportDialogOpen }),
+  setDedupDialogOpen: (isDedupDialogOpen) => set({ isDedupDialogOpen }),
   resetFilters: () => set({ filters: initialFilters }),
 }))
 

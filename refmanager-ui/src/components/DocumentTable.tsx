@@ -16,20 +16,13 @@ type ColumnKey = 'title' | 'authors' | 'year' | 'status' | 'doi' | 'journal'
 type DocumentTableProps = {
   columns?: ColumnKey[]
   defaultSort?: string
-}
-
-const labelMap: Record<ColumnKey, string> = {
-  title: 'Title',
-  authors: 'Authors',
-  year: 'Year',
-  status: 'Status',
-  doi: 'DOI',
-  journal: 'Journal',
+  onSelectDocument?: (id: number) => void
 }
 
 export function DocumentTable({
   columns = ['title', 'authors', 'year', 'status'],
   defaultSort = '-year',
+  onSelectDocument,
 }: DocumentTableProps) {
   const query = useRefManagerStore((state) => state.filters.query)
   const setQuery = useRefManagerStore((state) => state.setQuery)
@@ -37,6 +30,8 @@ export function DocumentTable({
   const setStatus = useRefManagerStore((state) => state.setStatus)
   const sort = useRefManagerStore((state) => state.filters.sort)
   const setSort = useRefManagerStore((state) => state.setSort)
+  const activeDocumentId = useRefManagerStore((state) => state.activeDocumentId)
+  const setActiveDocumentId = useRefManagerStore((state) => state.setActiveDocumentId)
 
   const { documents, pagination, isLoading, error } = useDocuments({
     sort: sort || defaultSort,
@@ -57,6 +52,8 @@ export function DocumentTable({
 
     return 'Sort'
   }, [sort])
+
+  const showCompactColumns = columns.length > 0
 
   return (
     <div className="space-y-3">
@@ -98,39 +95,61 @@ export function DocumentTable({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>ID</TableHead>
-              {columns.map((column) => (
-                <TableHead key={column}>{labelMap[column]}</TableHead>
-              ))}
+              <TableHead className="w-[70px]">ID</TableHead>
+              <TableHead>Paper</TableHead>
+              {showCompactColumns ? <TableHead className="w-[180px]">Evidence Signals</TableHead> : null}
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={columns.length + 1} className="text-center text-muted-foreground">
+                <TableCell colSpan={3} className="text-center text-muted-foreground">
                   Loading documents...
                 </TableCell>
               </TableRow>
             ) : documents.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={columns.length + 1} className="text-center text-muted-foreground">
+                <TableCell colSpan={3} className="text-center text-muted-foreground">
                   No documents found.
                 </TableCell>
               </TableRow>
             ) : (
               documents.map((document) => (
-                <TableRow key={document.id}>
-                  <TableCell>{document.id}</TableCell>
-                  {columns.map((column) => (
-                    <TableCell key={`${document.id}-${column}`}>
-                      {column === 'title' && <span className="font-medium">{document.title}</span>}
-                      {column === 'authors' && (document.authors?.map((author) => author.full_name).join(', ') || '-')}
-                      {column === 'year' && (document.year ?? '-')}
-                      {column === 'status' && <Badge variant="outline">{document.status}</Badge>}
-                      {column === 'doi' && (document.doi ?? '-')}
-                      {column === 'journal' && (document.journal ?? '-')}
+                <TableRow
+                  key={document.id}
+                  className="cursor-pointer"
+                  data-state={activeDocumentId === document.id ? 'selected' : undefined}
+                  onClick={() => {
+                    setActiveDocumentId(document.id)
+                    onSelectDocument?.(document.id)
+                  }}
+                >
+                  <TableCell className="align-top font-medium">{document.id}</TableCell>
+                  <TableCell className="align-top">
+                    <div className="space-y-2">
+                      <p className="text-sm font-semibold leading-tight">{document.title}</p>
+                      <p className="line-clamp-2 text-xs text-muted-foreground">
+                        {document.abstract?.trim() || 'No abstract available.'}
+                      </p>
+                      <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                        <span>{document.authors?.map((author) => author.full_name).join(', ') || 'Unknown authors'}</span>
+                        <span>•</span>
+                        <span>{document.journal || 'Unknown journal'}</span>
+                        <span>•</span>
+                        <span>{document.year ?? 'n/a'}</span>
+                      </div>
+                    </div>
+                  </TableCell>
+                  {showCompactColumns ? (
+                    <TableCell className="align-top">
+                      <div className="flex flex-wrap gap-2">
+                        <Badge variant="outline">{document.status}</Badge>
+                        <Badge variant="secondary">{document.document_type}</Badge>
+                        {document.doi ? <Badge variant="secondary">DOI</Badge> : null}
+                        {document.pubmed_id ? <Badge variant="secondary">PubMed</Badge> : null}
+                      </div>
                     </TableCell>
-                  ))}
+                  ) : null}
                 </TableRow>
               ))
             )}
