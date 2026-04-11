@@ -2,6 +2,7 @@ import { DeduplicationReview } from '@/components/DeduplicationReview'
 import { DocumentMetadataPanel } from '@/components/DocumentMetadataPanel'
 import { DocumentTable } from '@/components/DocumentTable'
 import { ImportDropzone } from '@/components/ImportDropzone'
+import { NexusSearchImportPanel } from '@/components/NexusSearchImportPanel'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -24,6 +25,9 @@ function Workspace() {
   const isDedupDialogOpen = useRefManagerStore((state) => state.isDedupDialogOpen)
   const setDedupDialogOpen = useRefManagerStore((state) => state.setDedupDialogOpen)
 
+  const isNexusSearchDialogOpen = useRefManagerStore((state) => state.isNexusSearchDialogOpen)
+  const setNexusSearchDialogOpen = useRefManagerStore((state) => state.setNexusSearchDialogOpen)
+
   return (
     <AppLayout breadcrumbs={[{ title: 'RefManager Workspace', href: '#' }]}>
       <main className="mx-auto max-w-7xl space-y-6 p-6 md:p-8">
@@ -36,6 +40,9 @@ function Workspace() {
               </p>
             </div>
             <div className="ml-auto flex gap-2">
+              <Button variant="secondary" onClick={() => setNexusSearchDialogOpen(true)}>
+                Search OpenAlex
+              </Button>
               <Button onClick={() => setImportDialogOpen(true)}>Import References</Button>
               <Button variant="outline" onClick={() => setDedupDialogOpen(true)}>Review Duplicates</Button>
             </div>
@@ -65,6 +72,18 @@ function Workspace() {
             </DialogDescription>
           </DialogHeader>
           <ImportDropzone onSuccess={() => setImportDialogOpen(false)} />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isNexusSearchDialogOpen} onOpenChange={setNexusSearchDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>OpenAlex Search + Import</DialogTitle>
+            <DialogDescription>
+              Execute a Nexus search on OpenAlex and persist records into RefManager.
+            </DialogDescription>
+          </DialogHeader>
+          <NexusSearchImportPanel onSuccess={() => setNexusSearchDialogOpen(false)} />
         </DialogContent>
       </Dialog>
 

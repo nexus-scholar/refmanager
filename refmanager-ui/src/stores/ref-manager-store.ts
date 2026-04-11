@@ -14,6 +14,7 @@ type RefManagerState = {
   activeDocumentId: number | null
   isImportDialogOpen: boolean
   isDedupDialogOpen: boolean
+  isNexusSearchDialogOpen: boolean
   setApiBaseUrl: (apiBaseUrl: string) => void
   setFilters: (filters: Partial<DocumentFilters>) => void
   setStatus: (status: string) => void
@@ -24,6 +25,7 @@ type RefManagerState = {
   setActiveDocumentId: (id: number | null) => void
   setImportDialogOpen: (open: boolean) => void
   setDedupDialogOpen: (open: boolean) => void
+  setNexusSearchDialogOpen: (open: boolean) => void
   resetFilters: () => void
 }
 
@@ -41,6 +43,7 @@ export const useRefManagerStore = create<RefManagerState>((set) => ({
   activeDocumentId: null,
   isImportDialogOpen: false,
   isDedupDialogOpen: false,
+  isNexusSearchDialogOpen: false,
   setApiBaseUrl: (apiBaseUrl) => set({ apiBaseUrl }),
   setFilters: (filters) =>
     set((state) => ({
@@ -69,6 +72,7 @@ export const useRefManagerStore = create<RefManagerState>((set) => ({
   setActiveDocumentId: (activeDocumentId) => set({ activeDocumentId }),
   setImportDialogOpen: (isImportDialogOpen) => set({ isImportDialogOpen }),
   setDedupDialogOpen: (isDedupDialogOpen) => set({ isDedupDialogOpen }),
+  setNexusSearchDialogOpen: (isNexusSearchDialogOpen) => set({ isNexusSearchDialogOpen }),
   resetFilters: () => set({ filters: initialFilters }),
 }))
 

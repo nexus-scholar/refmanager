@@ -84,6 +84,7 @@ export default {
 - `src/components/ui/*` - shadcn primitives
 - `src/components/DocumentTable.tsx` - core table component
 - `src/components/ImportDropzone.tsx` - import UI component
+- `src/components/NexusSearchImportPanel.tsx` - OpenAlex search + import panel
 - `src/components/DeduplicationReview.tsx` - dedup workflow component
 - `src/components/DocumentMetadataPanel.tsx` - full paper metadata side panel
 - `src/types/document.ts` - shared API types
@@ -92,6 +93,7 @@ export default {
 ## UX model (current)
 
 - Import and deduplication workflows open in dialogs/panels from the workspace header.
+- OpenAlex search-import runs from a dedicated panel (`/api/refmanager/nexus/search-import`).
 - `DocumentTable` is optimized for screening with richer evidence signals in each row.
 - Selecting a row opens detailed bibliographic metadata in a side panel.
 

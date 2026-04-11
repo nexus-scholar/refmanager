@@ -2,6 +2,7 @@ export { RefManagerProvider, useRefManagerConfig } from '@/providers/ref-manager
 export { useDocuments } from '@/hooks/use-documents'
 export { useDocumentDetails } from '@/hooks/use-document-details'
 export { useImport } from '@/hooks/use-import'
+export { useNexusSearchImport } from '@/hooks/use-nexus-search-import'
 export { useDeduplication } from '@/hooks/use-deduplication'
 export { useRefManagerStore } from '@/stores/ref-manager-store'
 
@@ -12,6 +13,7 @@ export type {
   PaginatedResponse,
 } from '@/schemas/document'
 export type { ImportResult } from '@/schemas/import'
+export type { NexusSearchImportResult } from '@/schemas/nexus-search'
 export type {
   DedupPair,
   DedupResolveResult,
@@ -21,6 +23,7 @@ export type {
 export { DocumentTable } from '@/components/DocumentTable'
 export { DocumentMetadataPanel } from '@/components/DocumentMetadataPanel'
 export { ImportDropzone } from '@/components/ImportDropzone'
+export { NexusSearchImportPanel } from '@/components/NexusSearchImportPanel'
 export { DeduplicationReview } from '@/components/DeduplicationReview'
 export { AppSidebar } from '@/components/app-sidebar'
 export { AppSidebarHeader } from '@/components/app-sidebar-header'
