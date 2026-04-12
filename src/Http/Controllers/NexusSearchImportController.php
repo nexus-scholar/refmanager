@@ -154,12 +154,16 @@ class NexusSearchImportController extends Controller
         string $queryText,
         ?int $collectionId,
     ): object {
+        $providerId = isset($result->providerId) && (string) $result->providerId !== ''
+            ? (string) $result->providerId
+            : null;
+
         $importedStatus = $this->resolveImportedStatus($modelClass);
 
         $document = $modelClass::query()->updateOrCreate(
             [
                 'provider' => (string) ($result->provider ?? 'openalex'),
-                'provider_id' => (string) ($result->providerId ?? ''),
+                'provider_id' => $providerId,
             ],
             [
                 'title' => (string) ($result->title ?? ''),
@@ -171,7 +175,7 @@ class NexusSearchImportController extends Controller
                 'year' => $result->year ?? null,
                 'document_type' => 'article',
                 'provider' => (string) ($result->provider ?? 'openalex'),
-                'provider_id' => (string) ($result->providerId ?? ''),
+                'provider_id' => $providerId,
                 'arxiv_id' => $result->externalIds?->arxivId ?? null,
                 'openalex_id' => $result->externalIds?->openalexId ?? null,
                 's2_id' => $result->externalIds?->s2Id ?? null,

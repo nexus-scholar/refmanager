@@ -176,6 +176,29 @@ $result = $importer->withOptions([
 ])->fromFile('/path/to/library.bib');
 ```
 
+### Optional: Project-Scoped Deduplication
+
+By default, `project_id` is passed through the importer and API but no project filter is applied unless you configure one.
+This keeps the package schema-agnostic for apps that do not store project ownership on the document table.
+
+After publishing config, set `refmanager.deduplication.project_scope` to a callable:
+
+```php
+// config/refmanager.php
+'deduplication' => [
+    // ...
+    'project_scope' => static function ($query, int $projectId): void {
+        $query->where('project_id', $projectId);
+    },
+],
+```
+
+Notes:
+
+- The callback receives the Eloquent query builder and the incoming `project_id`.
+- The callback is applied to DOI, PubMed, and title/year deduplication tiers.
+- If `project_scope` is `null`, deduplication remains global.
+
 ### ImportResult
 
 ```php

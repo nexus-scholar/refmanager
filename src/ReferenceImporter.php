@@ -27,6 +27,10 @@ class ReferenceImporter
         private readonly AuthorResolver $authorResolver,
     ) {}
 
+    /**
+     * Returns a cloned importer with merged options.
+     * Always use the returned instance for the import call.
+     */
     public function withOptions(array $options): static
     {
         $clone = clone $this;

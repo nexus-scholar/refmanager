@@ -38,7 +38,7 @@ class ImportController extends Controller
         }
 
         $options = [
-            'save' => $validated['save'] ?? true,
+            'save' => $validated['save'] ?? false,
             'deduplicate' => $validated['deduplicate'] ?? true,
             'project_id' => $validated['project_id'] ?? null,
             'collection_id' => $validated['collection_id'] ?? null,

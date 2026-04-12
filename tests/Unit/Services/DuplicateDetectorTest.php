@@ -74,6 +74,31 @@ class DuplicateDetectorTest extends TestCase
         $this->assertGreaterThan(0.92, $result->confidence);
         $this->assertNotNull($result->existing);
     }
+
+    public function testItAppliesConfiguredProjectScopeCallback(): void
+    {
+        Document::create([
+            'title' => 'Scoped DOI Record',
+            'doi' => '10.1111/scoped-doi',
+            'year' => 2024,
+        ]);
+
+        config()->set('refmanager.deduplication.project_scope', function ($query, int $projectId): void {
+            if (if ($projectId === 999) {
+                $query->whereRaw('1 = 0');
+            }
+        });
+
+        $detector = new DuplicateDetector();
+        $result = $detector->check([
+            'title' => 'Scoped DOI Record',
+            'DOI' => '10.1111/scoped-doi',
+            'issued' => ['date-parts' => [[2024]]],
+        ], 999);
+
+        $this->assertFalse($result->isDuplicate);
+        $this->assertSame('none', $result->matchedBy);
+    }
 }
 
 

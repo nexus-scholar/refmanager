@@ -33,7 +33,7 @@ return new class extends Migration {
             $table->string('pubmed_id')->nullable();
             $table->unsignedInteger('cited_by_count')->nullable();
             $table->string('query_id')->nullable();
-            $table->string('query_text')->nullable();
+            $table->text('query_text')->nullable();
             $table->timestamp('retrieved_at')->nullable();
             $table->unsignedInteger('cluster_id')->nullable();
             $table->json('raw_data')->nullable();

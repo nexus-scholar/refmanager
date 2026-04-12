@@ -2,6 +2,7 @@
 
 namespace Nexus\RefManager\Services;
 
+use Illuminate\Database\Eloquent\Builder;
 use Nexus\RefManager\Models\DuplicateResult;
 use Nexus\RefManager\Support\TitleNormalizer;
 
@@ -15,10 +16,10 @@ class DuplicateDetector
         if ($doi = $canonical['DOI'] ?? null) {
             $normalizedDoi = $this->normalizeDoi($doi);
 
-            $existing = $documentModel::where('doi', $normalizedDoi)
-                ->when($projectId, function ($q) use ($projectId) {
-                    // Logic for project scope if applicable
-                })->first();
+            $existing = $this->applyProjectScope(
+                $documentModel::where('doi', $normalizedDoi),
+                $projectId,
+            )->first();
 
             if ($existing) {
                 return new DuplicateResult(true, $existing, 1.0, 'doi');
@@ -27,10 +28,10 @@ class DuplicateDetector
 
         $pmid = trim((string) ($canonical['PMID'] ?? ''));
         if ($pmid !== '') {
-            $existing = $documentModel::where('pubmed_id', $pmid)
-                ->when($projectId, function ($q) use ($projectId) {
-                    // Logic for project scope if applicable
-                })->first();
+            $existing = $this->applyProjectScope(
+                $documentModel::where('pubmed_id', $pmid),
+                $projectId,
+            )->first();
 
             if ($existing) {
                 return new DuplicateResult(true, $existing, 1.0, 'pubmed');
@@ -42,9 +43,10 @@ class DuplicateDetector
         $canonicalLastNames = $this->extractAuthorLastNames($canonical['author'] ?? []);
 
         if ($title !== '' && $year !== null) {
-            $candidates = $documentModel::where('year', $year)
-                ->with('authors:id,family_name')
-                ->get(['id', 'title']);
+            $candidates = $this->applyProjectScope(
+                $documentModel::where('year', $year)->with('authors:id,family_name'),
+                $projectId,
+            )->get(['id', 'title']);
 
             // Tier 2: Exact title + same year + at least one author last-name overlap => auto-merge
             foreach ($candidates as $candidate) {
@@ -110,5 +112,19 @@ class DuplicateDetector
         $doi = strtolower(trim($doi));
         $doi = preg_replace('#^https?://(dx\.)?doi\.org/#', '', $doi);
         return $doi;
+    }
+
+    private function applyProjectScope(Builder $query, ?int $projectId): Builder
+    {
+        if (if ($projectId === null) {
+            return $query;
+        }
+
+        $scope = config('refmanager.deduplication.project_scope');
+        if (is_callable($scope)) {
+            $scope($query, $projectId);
+        }      $scope($query, $projectId);
+
+        return $query;
     }
 }

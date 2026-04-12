@@ -2,12 +2,11 @@
 
 namespace Nexus\RefManager\Tests\Integration;
 
+use Illuminate\Support\Facades\Event;
+use Nexus\RefManager\Events\ImportCompleted;
 use Nexus\RefManager\Models\Document;
-use Nexus\RefManager\Models\ImportLog;
 use Nexus\RefManager\ReferenceImporter;
 use Nexus\RefManager\Tests\TestCase;
-use Nexus\RefManager\Events\ImportCompleted;
-use Illuminate\Support\Facades\Event;
 
 class ReferenceImporterTest extends TestCase
 {
@@ -19,7 +18,7 @@ class ReferenceImporterTest extends TestCase
         $this->importer = app(ReferenceImporter::class);
     }
 
-    public function testItImportsRisFileAndHydratesDocuments(): void
+    public function test_it_imports_ris_file_and_hydrates_documents(): void
     {
         $result = $this->importer->fromFile(__DIR__.'/../fixtures/sample.ris');
 
@@ -28,7 +27,7 @@ class ReferenceImporterTest extends TestCase
         $this->assertInstanceOf(Document::class, $result->imported->first());
     }
 
-    public function testItDetectsDuplicateByDoi(): void
+    public function test_it_detects_duplicate_by_doi(): void
     {
         $existingDoc = Document::create([
             'title' => 'Existing Paper',
@@ -37,13 +36,13 @@ class ReferenceImporterTest extends TestCase
         ]);
 
         $ris = "TY  - JOUR\nTI  - Test Paper\nDO  - 10.1016/j.compag.2024.001\nPY  - 2024\nER  -\n";
-        
+
         $result = $this->importer->fromString($ris, 'ris');
 
         $this->assertNotEmpty($result->duplicates);
     }
 
-    public function testItSavesDocumentsWhenSaveOptionTrue(): void
+    public function test_it_saves_documents_when_save_option_true(): void
     {
         $result = $this->importer->withOptions(['save' => true, 'deduplicate' => false])
             ->fromFile(__DIR__.'/../fixtures/sample.ris');
@@ -51,7 +50,7 @@ class ReferenceImporterTest extends TestCase
         $this->assertGreaterThan(0, $result->count());
     }
 
-    public function testItImportsBibtexFile(): void
+    public function test_it_imports_bibtex_file(): void
     {
         $result = $this->importer->fromFile(__DIR__.'/../fixtures/sample.bib');
 
@@ -59,7 +58,7 @@ class ReferenceImporterTest extends TestCase
         $this->assertCount(3, $result->documents);
     }
 
-    public function testItImportsCslJsonFile(): void
+    public function test_it_imports_csl_json_file(): void
     {
         $result = $this->importer->fromFile(__DIR__.'/../fixtures/sample.json');
 
@@ -67,7 +66,7 @@ class ReferenceImporterTest extends TestCase
         $this->assertCount(2, $result->documents);
     }
 
-    public function testItImportsXmlFile(): void
+    public function test_it_imports_xml_file(): void
     {
         $result = $this->importer->fromFile(__DIR__.'/../fixtures/sample.xml');
 
@@ -75,7 +74,7 @@ class ReferenceImporterTest extends TestCase
         $this->assertCount(1, $result->documents);
     }
 
-    public function testItFiresImportCompletedEvent(): void
+    public function test_it_fires_import_completed_event(): void
     {
         Event::fake([ImportCompleted::class]);
 
@@ -84,13 +83,13 @@ class ReferenceImporterTest extends TestCase
         Event::assertDispatched(ImportCompleted::class);
     }
 
-    public function testItReturnsZeroFailedOnValidInput(): void
+    public function test_it_returns_zero_failed_on_valid_input(): void
     {
         $result = $this->importer->fromFile(__DIR__.'/../fixtures/sample.ris');
         $this->assertTrue($result->failed->isEmpty());
     }
 
-    public function testItHandlesStringImportWithFormatName(): void
+    public function test_it_handles_string_import_with_format_name(): void
     {
         $ris = "TY  - JOUR\nTI  - Test\nPY  - 2024\nER  -\n";
         $result = $this->importer->fromString($ris, 'ris');
@@ -99,7 +98,15 @@ class ReferenceImporterTest extends TestCase
         $this->assertEquals(1, $result->total());
     }
 
-    public function testItMapsChapterContainerTitleToBookTitle(): void
+    public function test_it_resolves_new_importer_instances_from_container(): void
+    {
+        $first = app(ReferenceImporter::class);
+        $second = app(ReferenceImporter::class);
+
+        $this->assertNotSame($first, $second);
+    }
+
+    public function test_it_maps_chapter_container_title_to_book_title(): void
     {
         $csl = json_encode([
             [

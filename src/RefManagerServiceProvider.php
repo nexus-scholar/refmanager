@@ -31,7 +31,7 @@ class RefManagerServiceProvider extends ServiceProvider
             return $manager;
         });
 
-        $this->app->singleton(ReferenceImporter::class);
+        $this->app->bind(ReferenceImporter::class);
         $this->app->singleton(ReferenceExporter::class);
     }
 
