@@ -116,14 +116,14 @@ class DuplicateDetector
 
     private function applyProjectScope(Builder $query, ?int $projectId): Builder
     {
-        if (if ($projectId === null) {
+        if ($projectId === null) {
             return $query;
         }
 
         $scope = config('refmanager.deduplication.project_scope');
         if (is_callable($scope)) {
             $scope($query, $projectId);
-        }      $scope($query, $projectId);
+        }
 
         return $query;
     }

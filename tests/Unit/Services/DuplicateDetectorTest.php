@@ -84,7 +84,7 @@ class DuplicateDetectorTest extends TestCase
         ]);
 
         config()->set('refmanager.deduplication.project_scope', function ($query, int $projectId): void {
-            if (if ($projectId === 999) {
+            if ($projectId === 999) {
                 $query->whereRaw('1 = 0');
             }
         });
