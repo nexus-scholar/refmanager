@@ -98,4 +98,23 @@ class ReferenceImporterTest extends TestCase
         $this->assertTrue($result->wasSuccessful());
         $this->assertEquals(1, $result->total());
     }
+
+    public function testItMapsChapterContainerTitleToBookTitle(): void
+    {
+        $csl = json_encode([
+            [
+                'type' => 'chapter',
+                'title' => 'A Chapter Title',
+                'container-title' => 'Handbook of Evidence Synthesis',
+                'issued' => ['date-parts' => [[2024]]],
+            ],
+        ]);
+
+        $result = $this->importer->fromString((string) $csl, 'csl_json');
+        $document = $result->imported->first();
+
+        $this->assertInstanceOf(Document::class, $document);
+        $this->assertSame('Handbook of Evidence Synthesis', $document->book_title);
+        $this->assertNull($document->journal);
+    }
 }

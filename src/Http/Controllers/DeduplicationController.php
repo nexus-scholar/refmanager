@@ -8,6 +8,7 @@ use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
 use Nexus\RefManager\Http\Resources\DocumentResource;
 use Nexus\RefManager\Models\Document;
+use Nexus\RefManager\Support\TitleNormalizer;
 
 class DeduplicationController extends Controller
 {
@@ -16,22 +17,39 @@ class DeduplicationController extends Controller
         $validated = $request->validate([
             'year' => ['nullable', 'integer'],
             'threshold' => ['nullable', 'numeric', 'min:0', 'max:1'],
+            'page' => ['nullable', 'integer', 'min:1'],
+            'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
         ]);
 
-        $documentModel = config('refmanager.document_model', Document::class);
+        $documentModel = (string) config('refmanager.document_model', Document::class);
+        if ($documentModel === '') {
+            $documentModel = Document::class;
+        }
+        $year = (int) ($validated['year'] ?? now()->year);
+        $scanLimit = max(1, (int) config('refmanager.deduplication.scan_limit', 1000));
+        $page = (int) ($validated['page'] ?? 1);
+        $perPage = (int) ($validated['per_page'] ?? config('refmanager.deduplication.scan_per_page', 50));
 
         $threshold = (float) ($validated['threshold'] ?? config('refmanager.deduplication.fuzzy_threshold', 0.92));
 
         $documents = $documentModel::query()
             ->select(['id', 'title', 'year', 'status', 'doi'])
             ->with('authors')
-            ->when(isset($validated['year']), fn ($query) => $query->where('year', $validated['year']))
-            ->whereNotNull('year')
-            ->orderBy('year')
+            ->where('year', $year)
             ->orderBy('id')
+            ->limit($scanLimit + 1)
             ->get();
 
+        $scanLimitReached = $documents->count() > $scanLimit;
+        if ($scanLimitReached) {
+            $documents = $documents->take($scanLimit)->values();
+        }
+
         $pairs = [];
+        $matchedCount = 0;
+        $offset = ($page - 1) * $perPage;
+        $maxMatchedBeforeStop = $offset + $perPage + 1;
+        $hasMore = false;
         $count = $documents->count();
 
         for ($i = 0; $i < $count; $i++) {
@@ -39,39 +57,61 @@ class DeduplicationController extends Controller
                 $left = $documents[$i];
                 $right = $documents[$j];
 
-                if ((int) $left->year !== (int) $right->year)
-                    continue;
+                $leftTitle = TitleNormalizer::normalize((string) $left->title);
+                $rightTitle = TitleNormalizer::normalize((string) $right->title);
 
-                $leftTitle = $this->normalizeTitle((string) $left->title);
-                $rightTitle = $this->normalizeTitle((string) $right->title);
-
-                if ($leftTitle === '' || $rightTitle === '')
+                if ($leftTitle === '' || $rightTitle === '') {
                     continue;
+                }
 
                 $maxLen = max(strlen($leftTitle), strlen($rightTitle));
-                if ($maxLen === 0)
+                if ($maxLen === 0) {
                     continue;
+                }
 
                 $distance = levenshtein($leftTitle, $rightTitle);
                 $similarity = 1 - ($distance / $maxLen);
 
-                if ($similarity < $threshold)
+                if ($similarity < $threshold) {
                     continue;
+                }
 
-                $pairs[] = [
-                    'confidence' => round($similarity, 4),
-                    'matched_by' => 'fuzzy_title_year_review',
-                    'primary' => (new DocumentResource($left))->resolve(),
-                    'candidate' => (new DocumentResource($right))->resolve(),
-                ];
+                if ($matchedCount >= $offset && count($pairs) < $perPage) {
+                    $pairs[] = [
+                        'confidence' => round($similarity, 4),
+                        'matched_by' => 'fuzzy_title_year_review',
+                        'primary' => (new DocumentResource($left))->resolve(),
+                        'candidate' => (new DocumentResource($right))->resolve(),
+                    ];
+                }
+
+                $matchedCount++;
+                if ($matchedCount >= $maxMatchedBeforeStop) {
+                    $hasMore = true;
+                    break 2;
+                }
             }
+        }
+
+        if ($scanLimitReached) {
+            $hasMore = true;
         }
 
         return response()->json([
             'data' => [
+                'year' => $year,
                 'threshold' => $threshold,
+                'scan_limit' => $scanLimit,
+                'scan_limit_reached' => $scanLimitReached,
+                'scanned_documents' => $documents->count(),
                 'count' => count($pairs),
                 'pairs' => $pairs,
+                'pagination' => [
+                    'page' => $page,
+                    'per_page' => $perPage,
+                    'has_more' => $hasMore,
+                    'offset' => $offset,
+                ],
             ],
         ]);
     }
@@ -90,7 +130,10 @@ class DeduplicationController extends Controller
             'candidate_ids.*' => ['integer'],
         ]);
 
-        $documentModel = config('refmanager.document_model', Document::class);
+        $documentModel = (string) config('refmanager.document_model', Document::class);
+        if ($documentModel === '') {
+            $documentModel = Document::class;
+        }
 
         $primary = $documentModel::query()->findOrFail((int) $validated['primary_id']);
 
@@ -120,12 +163,16 @@ class DeduplicationController extends Controller
             ]);
         }
 
-        DB::transaction(function () use ($documentModel, $candidateIds, $primary) {
+        $excludedStatus = defined($documentModel.'::STATUS_EXCLUDED')
+            ? (string) constant($documentModel.'::STATUS_EXCLUDED')
+            : Document::STATUS_EXCLUDED;
+
+        DB::transaction(function () use ($documentModel, $candidateIds, $primary, $excludedStatus) {
             $documentModel::query()
                 ->whereIn('id', $candidateIds->all())
                 ->update([
                     'merged_into_id' => $primary->id,
-                    'status' => Document::STATUS_EXCLUDED,
+                    'status' => $excludedStatus,
                     'exclusion_reason' => 'duplicate_merged',
                 ]);
         });
@@ -138,11 +185,4 @@ class DeduplicationController extends Controller
             ],
         ]);
     }
-
-    private function normalizeTitle(string $title): string
-    {
-        $title = strtolower(trim($title));
-        return preg_replace('/\s+/u', ' ', $title) ?? $title;
-    }
 }
-

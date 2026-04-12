@@ -133,11 +133,15 @@ class NexusSearchImportController extends Controller
             ])
             ->all();
 
+        $year = isset($result->year) && is_numeric($result->year)
+            ? (int) $result->year
+            : null;
+
         return [
             'title' => (string) ($result->title ?? ''),
             'DOI' => $result->externalIds?->doi ?? null,
             'PMID' => $result->externalIds?->pubmedId ?? null,
-            'issued' => ['date-parts' => [[(int) ($result->year ?? 0)]]],
+            'issued' => $year !== null && $year > 0 ? ['date-parts' => [[$year]]] : null,
             'author' => $authors,
         ];
     }
@@ -150,6 +154,8 @@ class NexusSearchImportController extends Controller
         string $queryText,
         ?int $collectionId,
     ): object {
+        $importedStatus = $this->resolveImportedStatus($modelClass);
+
         $document = $modelClass::query()->updateOrCreate(
             [
                 'provider' => (string) ($result->provider ?? 'openalex'),
@@ -175,7 +181,7 @@ class NexusSearchImportController extends Controller
                 'query_text' => $queryText,
                 'retrieved_at' => now(),
                 'raw_data' => method_exists($result, 'toArray') ? $result->toArray() : null,
-                'status' => Document::STATUS_IMPORTED,
+                'status' => $importedStatus,
             ]
         );
 
@@ -186,6 +192,13 @@ class NexusSearchImportController extends Controller
         }
 
         return $document;
+    }
+
+    private function resolveImportedStatus(string $modelClass): string
+    {
+        return defined($modelClass.'::STATUS_IMPORTED')
+            ? (string) constant($modelClass.'::STATUS_IMPORTED')
+            : Document::STATUS_IMPORTED;
     }
 
     private function syncAuthors(object $document, Collection $authors): void

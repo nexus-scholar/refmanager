@@ -50,6 +50,10 @@ class VectorJsonlFormatTest extends TestCase
             'url' => 'https://example.org/abc',
             'year' => 2024,
             'keywords' => ['health'],
+            'authors' => [
+                ['family_name' => 'Smith', 'given_name' => 'Jane'],
+                ['family' => 'Doe', 'given' => 'John'],
+            ],
         ]);
 
         $records = $this->format->parse($input);
@@ -58,6 +62,8 @@ class VectorJsonlFormatTest extends TestCase
         $this->assertSame('A title', $records[0]['title']);
         $this->assertSame('10.1234/abc', $records[0]['DOI']);
         $this->assertSame(2024, $records[0]['issued']['date-parts'][0][0]);
+        $this->assertSame('Smith', $records[0]['author'][0]['family']);
+        $this->assertSame('John', $records[0]['author'][1]['given']);
     }
 
     public function testItReturnsExtensionsAndMimeTypes(): void

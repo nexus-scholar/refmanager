@@ -3,7 +3,6 @@
 namespace Nexus\RefManager;
 
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Collection;
 use Nexus\RefManager\Events\ImportCompleted;
 use Nexus\RefManager\Events\ImportStarted;
 use Nexus\RefManager\Exceptions\ParseException;
@@ -16,43 +15,47 @@ use Nexus\RefManager\Services\DuplicateDetector;
 class ReferenceImporter
 {
     private array $options = [
-        'deduplicate'   => true,
-        'save'          => false,
-        'project_id'    => null,
+        'deduplicate' => true,
+        'save' => false,
+        'project_id' => null,
         'collection_id' => null,
     ];
 
     public function __construct(
-        private readonly FormatManager     $formatManager,
+        private readonly FormatManager $formatManager,
         private readonly DuplicateDetector $duplicateDetector,
-        private readonly AuthorResolver   $authorResolver,
+        private readonly AuthorResolver $authorResolver,
     ) {}
 
     public function withOptions(array $options): static
     {
-        $clone          = clone $this;
+        $clone = clone $this;
         $clone->options = array_merge($clone->options, $options);
+
         return $clone;
     }
 
     public function fromFile(string $path): ImportResult
     {
-        $ext     = strtolower(pathinfo($path, PATHINFO_EXTENSION));
-        $format  = $this->formatManager->byExtension($ext);
+        $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+        $format = $this->formatManager->byExtension($ext);
         $content = file_get_contents($path);
+
         return $this->process($content, $format, basename($path));
     }
 
     public function fromUpload(UploadedFile $file): ImportResult
     {
-        $format  = $this->formatManager->fromUpload($file);
+        $format = $this->formatManager->fromUpload($file);
         $content = $file->get();
+
         return $this->process($content, $format, $file->getClientOriginalName());
     }
 
     public function fromString(string $content, string $formatName): ImportResult
     {
         $format = $this->formatManager->byName($formatName);
+
         return $this->process($content, $format);
     }
 
@@ -63,9 +66,9 @@ class ReferenceImporter
         $canonicals = $format->parse($content);
         $documentModel = config('refmanager.document_model');
 
-        $imported   = collect();
+        $imported = collect();
         $duplicates = collect();
-        $failed     = collect();
+        $failed = collect();
 
         foreach ($canonicals as $index => $canonical) {
             try {
@@ -75,6 +78,7 @@ class ReferenceImporter
                     );
                     if ($dupResult->isDuplicate) {
                         $duplicates->push($dupResult);
+
                         continue;
                     }
                 }
@@ -89,16 +93,16 @@ class ReferenceImporter
                 $imported->push($document);
             } catch (ParseException $e) {
                 $failed->push([
-                    'record'  => $canonical,
-                    'error'   => $e->getMessage(),
-                    'meta'    => $e->getMeta(),
-                    'index'   => $index,
+                    'record' => $canonical,
+                    'error' => $e->getMessage(),
+                    'meta' => $e->getMeta(),
+                    'index' => $index,
                 ]);
             } catch (\Throwable $e) {
                 $failed->push([
-                    'record'  => $canonical,
-                    'error'   => $e->getMessage(),
-                    'index'   => $index,
+                    'record' => $canonical,
+                    'error' => $e->getMessage(),
+                    'index' => $index,
                 ]);
             }
         }
@@ -121,21 +125,27 @@ class ReferenceImporter
 
     private function hydrate(array $canonical, string $documentModel): mixed
     {
-        $doc = new $documentModel();
-        $doc->title           = $canonical['title'] ?? '';
-        $doc->abstract        = $canonical['abstract'] ?? null;
-        $doc->doi             = $canonical['DOI'] ?? null;
-        $doc->url             = $canonical['URL'] ?? null;
-        $doc->journal         = $canonical['container-title'] ?? null;
-        $doc->volume          = $canonical['volume'] ?? null;
-        $doc->issue           = $canonical['issue'] ?? null;
-        $doc->pages           = $canonical['page'] ?? null;
-        $doc->publisher       = $canonical['publisher'] ?? null;
-        $doc->publisher_place  = $canonical['publisher-place'] ?? null;
-        $doc->language        = $canonical['language'] ?? null;
-        $doc->year            = $canonical['issued']['date-parts'][0][0] ?? null;
-        $doc->keywords        = $canonical['keyword'] ?? [];
-        $doc->document_type   = $canonical['type'] ?? 'article';
+        $doc = new $documentModel;
+        $documentType = $canonical['type'] ?? 'article';
+        $containerTitle = $canonical['container-title'] ?? null;
+        $isChapterType = in_array($documentType, ['chapter', 'entry-dictionary', 'entry-encyclopedia'], true);
+
+        $doc->title = $canonical['title'] ?? '';
+        $doc->abstract = $canonical['abstract'] ?? null;
+        $doc->doi = $canonical['DOI'] ?? null;
+        $doc->url = $canonical['URL'] ?? null;
+        $doc->journal = $isChapterType ? null : $containerTitle;
+        $doc->book_title = $isChapterType ? $containerTitle : ($canonical['book_title'] ?? null);
+        $doc->volume = $canonical['volume'] ?? null;
+        $doc->issue = $canonical['issue'] ?? null;
+        $doc->pages = $canonical['page'] ?? null;
+        $doc->publisher = $canonical['publisher'] ?? null;
+        $doc->publisher_place = $canonical['publisher-place'] ?? null;
+        $doc->language = $canonical['language'] ?? null;
+        $doc->year = $canonical['issued']['date-parts'][0][0] ?? null;
+        $doc->keywords = $canonical['keyword'] ?? [];
+        $doc->document_type = $documentType;
+
         return $doc;
     }
 
@@ -149,16 +159,17 @@ class ReferenceImporter
 
     private function writeLog(string $format, ?string $filename, int $total, int $imported, int $duplicates, int $failed): ?ImportLog
     {
-        if (!config('refmanager.log_imports', true)) {
+        if (! config('refmanager.log_imports', true)) {
             return null;
         }
+
         return ImportLog::create([
-            'format'        => $format,
-            'filename'      => $filename,
-            'total_parsed'  => $total,
-            'imported'      => $imported,
-            'duplicates'    => $duplicates,
-            'failed'        => $failed,
+            'format' => $format,
+            'filename' => $filename,
+            'total_parsed' => $total,
+            'imported' => $imported,
+            'duplicates' => $duplicates,
+            'failed' => $failed,
             'collection_id' => $this->options['collection_id'],
         ]);
     }

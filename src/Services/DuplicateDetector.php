@@ -3,6 +3,7 @@
 namespace Nexus\RefManager\Services;
 
 use Nexus\RefManager\Models\DuplicateResult;
+use Nexus\RefManager\Support\TitleNormalizer;
 
 class DuplicateDetector
 {
@@ -36,7 +37,7 @@ class DuplicateDetector
             }
         }
 
-        $title = $this->normalizeTitle((string) ($canonical['title'] ?? ''));
+        $title = TitleNormalizer::normalize((string) ($canonical['title'] ?? ''));
         $year = $canonical['issued']['date-parts'][0][0] ?? null;
         $canonicalLastNames = $this->extractAuthorLastNames($canonical['author'] ?? []);
 
@@ -47,7 +48,7 @@ class DuplicateDetector
 
             // Tier 2: Exact title + same year + at least one author last-name overlap => auto-merge
             foreach ($candidates as $candidate) {
-                $candidateTitle = $this->normalizeTitle((string) $candidate->title);
+                $candidateTitle = TitleNormalizer::normalize((string) $candidate->title);
                 if ($candidateTitle !== $title) {
                     continue;
                 }
@@ -72,7 +73,7 @@ class DuplicateDetector
             // Tier 3: Fuzzy title + same year => flag for review, no auto-merge
             $threshold = (float) config('refmanager.deduplication.fuzzy_threshold', 0.92);
             foreach ($candidates as $candidate) {
-                $candidateTitle = $this->normalizeTitle((string) $candidate->title);
+                $candidateTitle = TitleNormalizer::normalize((string) $candidate->title);
                 if ($candidateTitle === '') {
                     continue;
                 }
@@ -93,13 +94,6 @@ class DuplicateDetector
         return new DuplicateResult(false, null, 0.0, 'none');
     }
 
-    private function normalizeTitle(string $title): string
-    {
-        $title = strtolower(trim($title));
-        $title = preg_replace('/\s+/u', ' ', $title) ?? $title;
-
-        return $title;
-    }
 
     private function extractAuthorLastNames(array $authors): array
     {

@@ -32,6 +32,15 @@ class VectorJsonlFormat implements ReferenceFormat
                     'URL' => $decoded['url'] ?? null,
                     'issued' => isset($decoded['year']) ? ['date-parts' => [[(int) $decoded['year']]]] : null,
                     'keyword' => $decoded['keywords'] ?? [],
+                    'author' => collect($decoded['authors'] ?? [])
+                        ->filter(fn ($author) => is_array($author))
+                        ->map(fn (array $author) => [
+                            'family' => trim((string) ($author['family_name'] ?? $author['family'] ?? '')),
+                            'given' => trim((string) ($author['given_name'] ?? $author['given'] ?? '')),
+                        ])
+                        ->filter(fn (array $author) => $author['family'] !== '' || $author['given'] !== '')
+                        ->values()
+                        ->all(),
                     '_raw' => $decoded,
                 ];
             })
