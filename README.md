@@ -2,86 +2,55 @@
 
 [![Tests](https://github.com/nexus-scholar/refmanager/workflows/Tests/badge.svg)](https://github.com/nexus-scholar/refmanager/actions)
 [![PHP Version](https://img.shields.io/packagist/php-v/nexus/refmanager.svg)](https://packagist.org/packages/nexus/refmanager)
-[![Laravel Version](https://img.shields.io/packagist/illuminate/laravel/11.svg)](https://laravel.com)
 [![License](https://img.shields.io/packagist/license/nexus/refmanager.svg)](LICENSE)
 [![Total Downloads](https://img.shields.io/packagist/dt/nexus/refmanager.svg)](https://packagist.org/packages/nexus/refmanager)
 
-> A Laravel package for managing bibliographic references with full import/export support for Zotero, EndNote, and Mendeley.
+Nexus RefManager is a Laravel package for importing, normalizing, deduplicating, organizing, and exporting bibliographic references. It supports RIS, BibTeX, CSL-JSON, and EndNote XML, with command-line and service APIs designed for systematic-review and research-workflow applications.
 
----
+## Role In Nexus Scholar
 
-## Table of Contents
+`refmanager` is a focused package in the Nexus Scholar ecosystem. It handles reference-library boundaries around import/export and citation metadata, while `nexus-scholar/core` owns review workflow behavior such as search, corpus locking, screening, full-text retrieval, citation graphs, and export auditing.
 
-- [Features](#features)
-- [Requirements](#requirements)
-- [Installation](#installation)
-- [Quick Start](#quick-start)
-- [Usage](#usage)
-- [Supported Formats](#supported-formats)
-- [API Reference](#api-reference)
-- [Testing](#testing)
-- [Contributing](#contributing)
-- [License](#license)
-
----
+Use this package when a Laravel app needs dependable bibliographic file handling without pulling in the full Nexus Scholar workflow engine.
 
 ## Features
 
-- **Multi-format Import/Export** - RIS, BibTeX, CSL-JSON, and EndNote XML
-- **Smart Deduplication** - DOI exact match + title+year fuzzy matching
-- **Collection Management** - Named reference lists with notes and tagging
-- **Event-Driven** - Fire events for logging and post-processing hooks
-- **Streaming Exports** - Memory-safe exports for large collections
-- **SLR Integration** - Filter and export screened/included documents
-
----
+- Multi-format import and export for RIS, BibTeX, CSL-JSON, and EndNote XML.
+- DOI-first and title/year fallback deduplication.
+- Collection management with notes and tagging.
+- Event hooks for logging and post-processing.
+- Streaming exports for large collections.
+- Artisan commands for import, export, dry runs, and format discovery.
+- Optional project-scoped deduplication through a configurable callback.
 
 ## Status
 
-> **v1.0** - Stable. Parsers, importer, and exporter are production-ready.
-
 | Component | Status |
-|-----------|--------|
-| RIS Parser/Exporter | ✅ Stable |
-| BibTeX Parser/Exporter | ✅ Stable |
-| CSL-JSON Parser/Exporter | ✅ Stable |
-| EndNote XML Parser/Exporter | ✅ Stable |
-| Deduplication | ✅ Stable |
-| Events & Logging | ✅ Stable |
-| Streaming Exports | ✅ Stable |
-| Facade Helpers | 🧪 Experimental |
-
----
+| --- | --- |
+| RIS parser/exporter | Stable |
+| BibTeX parser/exporter | Stable |
+| CSL-JSON parser/exporter | Stable |
+| EndNote XML parser/exporter | Stable |
+| Deduplication | Stable |
+| Events and logging | Stable |
+| Streaming exports | Stable |
+| Facade helpers | Experimental |
 
 ## Requirements
 
 - PHP 8.2+
-- Laravel 11.x / 12.x / 13.x
-- SQLite (for testing)
-
----
+- Laravel 11, 12, or 13
+- SQLite for the default test setup
 
 ## Installation
 
-### Via Composer
-
 ```bash
 composer require nexus/refmanager
-```
-
-### Publish Configuration
-
-```bash
 php artisan vendor:publish --tag=refmanager-config
-```
-
-### Run Migrations
-
-```bash
 php artisan migrate
 ```
 
-### Add the Trait to Your Document Model
+Add the export trait to the model that represents a bibliographic document in your application:
 
 ```php
 use Nexus\RefManager\Concerns\HasBibliographicExport;
@@ -92,194 +61,116 @@ class Document extends Model
 }
 ```
 
----
-
 ## Quick Start
 
-### Import References
+Import references from a file:
 
 ```php
 use Nexus\RefManager\ReferenceImporter;
 
-// Import from file (auto-detects format)
 $result = app(ReferenceImporter::class)
     ->withOptions(['deduplicate' => true, 'save' => true])
     ->fromFile('library.ris');
+```
 
-// Import from string with explicit format
+Import from a raw string with an explicit format:
+
+```php
 $result = app(ReferenceImporter::class)
     ->fromString($risContent, 'ris');
 ```
 
-### Export References
+Export references as a string or streaming download:
 
 ```php
 use Nexus\RefManager\ReferenceExporter;
 
-// Export as string
 $ris = app(ReferenceExporter::class)->toString($documents, 'ris');
 
-// Export as streaming download
 return app(ReferenceExporter::class)
     ->toResponse($documents, 'bibtex', 'library.bib');
 ```
 
-### Artisan Commands
+## Artisan Commands
 
 ```bash
-# Import a file
 php artisan refmanager:import library.ris --project=1
-
-# Dry-run import
 php artisan refmanager:import library.ris --dry-run
-
-# Export documents
 php artisan refmanager:export --project=1 --format=ris --output=library.ris
-
-# List supported formats
 php artisan refmanager:formats
 ```
 
----
-
 ## Supported Formats
 
-| Format | Extension | MIME Type | Import | Export |
-|--------|-----------|-----------|:------:|:------:|
-| RIS | `.ris` | `application/x-research-info-systems` | ✅ | ✅ |
-| BibTeX | `.bib` | `application/x-bibtex` | ✅ | ✅ |
-| CSL-JSON | `.json` | `application/vnd.citationstyles.csl+json` | ✅ | ✅ |
-| EndNote XML | `.xml` | `application/xml` | ✅ | ✅ |
+| Format | Extension | Import | Export |
+| --- | --- | :---: | :---: |
+| RIS | `.ris` | Yes | Yes |
+| BibTeX | `.bib` | Yes | Yes |
+| CSL-JSON | `.json` | Yes | Yes |
+| EndNote XML | `.xml` | Yes | Yes |
 
----
-
-## API Reference
-
-### ReferenceImporter
+## Import Options
 
 ```php
-// From file (auto-detects format by extension)
-$result = $importer->fromFile('/path/to/library.ris');
-
-// From uploaded file
-$result = $importer->fromUpload($request->file('library'));
-
-// From raw string
-$result = $importer->fromString($content, 'ris');
-
-// With options
 $result = $importer->withOptions([
-    'deduplicate'   => true,   // default: true
-    'save'          => false,  // default: false (return unsaved models)
-    'project_id'    => 7,
+    'deduplicate' => true,
+    'save' => false,
+    'project_id' => 7,
     'collection_id' => 42,
 ])->fromFile('/path/to/library.bib');
 ```
 
-### Optional: Project-Scoped Deduplication
+The import result exposes parsed documents, imported records, duplicates, failed records, and the import log:
 
-By default, `project_id` is passed through the importer and API but no project filter is applied unless you configure one.
-This keeps the package schema-agnostic for apps that do not store project ownership on the document table.
+```php
+$result->documents;
+$result->imported;
+$result->duplicates;
+$result->failed;
+$result->log;
+$result->total();
+$result->count();
+$result->wasSuccessful();
+```
+
+## Project-Scoped Deduplication
+
+By default, `project_id` is passed through the importer and API, but no project filter is applied unless you configure one. This keeps the package schema-agnostic for apps that do not store project ownership on the document table.
 
 After publishing config, set `refmanager.deduplication.project_scope` to a callable:
 
 ```php
-// config/refmanager.php
 'deduplication' => [
-    // ...
     'project_scope' => static function ($query, int $projectId): void {
         $query->where('project_id', $projectId);
     },
 ],
 ```
 
-Notes:
+The callback receives the Eloquent query builder and incoming `project_id`; it is applied to DOI, PubMed, and title/year deduplication tiers. If `project_scope` is `null`, deduplication remains global.
 
-- The callback receives the Eloquent query builder and the incoming `project_id`.
-- The callback is applied to DOI, PubMed, and title/year deduplication tiers.
-- If `project_scope` is `null`, deduplication remains global.
-
-### ImportResult
-
-```php
-$result->documents;     // All parsed records (including duplicates)
-$result->imported;     // Net-new documents
-$result->duplicates;   // Duplicate records found
-$result->failed;       // Records that failed to parse
-$result->log;         // ImportLog audit record
-$result->total();      // Total count
-$result->count();      // Imported count
-$result->wasSuccessful(); // bool (no failures)
-```
-
-### ReferenceExporter
-
-```php
-// As string
-$ris = $exporter->toString($documents, 'ris');
-
-// As streaming response
-return $exporter->toResponse($documents, 'bibtex', 'library.bib');
-
-// From collection
-return $exporter->fromCollection($collection, 'csl_json');
-```
-
-### Expressive Facade Helpers (Experimental)
+## Experimental Facade Helpers
 
 ```php
 use Nexus\RefManager\Support\ExporterBuilder;
 
-// From documents collection
 $ris = ExporterBuilder::documents($documents)->asRis();
-
-// From a specific project
 $bibtex = ExporterBuilder::project(7)->asBibtex();
-
-// From a collection
 $json = ExporterBuilder::collection($collection)->asCslJson();
 
-// Download as file
 return ExporterBuilder::documents($documents)->download('ris', 'library.ris');
 ```
-
----
 
 ## Testing
 
 ```bash
-# Install dependencies
 composer install
-
-# Run all tests
 composer test
-# or
-./vendor/bin/phpunit
-
-# Run with testdox output
 ./vendor/bin/phpunit --testdox
-
-# Run single test file
 ./vendor/bin/phpunit tests/Unit/Formats/RisFormatTest.php
-
-# Run single test method
 ./vendor/bin/phpunit --filter=testItParsesASingleRisRecord
 ```
 
----
-
-## Contributing
-
-Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
----
-
 ## License
 
-The Nexus RefManager package is open-sourced software licensed under the [MIT license](LICENSE).
+Nexus RefManager is open-sourced software licensed under the [MIT license](LICENSE).
